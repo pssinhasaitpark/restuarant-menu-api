@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// model restaurant {
+//   id              String         @id @default(uuid())
+//   role_type       String         @default("restaurant_admin")
+//   restaurant_name String?
+//   owner_name      String?
+//   email           String         @unique
+//   password        String
+//   mobile          String
+//   opening_time    String?        @default("open _time")
+//   closing_time    String?        @default("close time")
+//   location        String?
+//   logo            String         @default("logo url")
+//   type            restaurantType @default(veg)
+//   images          String[]
+//   createdAt       DateTime       @default(now())
+//   updatedAt       DateTime       @updatedAt
+
+//   tables     table[]
+//   bookings   booking[]
+//   menu_items menu_items[]
+//   category   category[]
+// }
+model restaurant {
+  id              String         @id @default(uuid())
+  role_type       String         @default("restaurant_admin")
+  restaurant_name String?
+  owner_name      String?
+  email           String         @unique
+  password        String
+  mobile          String
+  opening_time    String?       
+  closing_time    String?       
+  location        String?
+  logo            String         @default("logo url")
+  type            restaurantType @default(veg)
+  images          String[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  qr_code_url     String?       
+
+  tables     table[]
+  bookings   booking[]
+  menu_items menu_items[]
+  category   category[]
+}
+
+
+enum restaurantType {
+  veg
+  non_veg
+}
+
+model table {
+  id            String @id @default(uuid()) @db.Uuid
+  table_number  String @unique
+  capacity      Int
+  cover_charges Int    @default(30)
+  status        String @default("free")
+
+  restaurant_id String
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  bookings      booking[]
+}
+
+model booking {
+  id                String  @id @default(uuid()) @db.Uuid
+  customer_name     String
+  contact_no        String
+  num_of_people     Int
+  booking_time      String
+  date              String
+  total_charge      Int
+  instruction       String?
+  status            String  @default("pending")
+  payment_status    String  @default("pending")
+  table_id          String  @db.Uuid
+  table             table   @relation(fields: [table_id], references: [id], onDelete: Cascade)
+  razorpay_order_id String  @default("null")
+  payement_id       String  @default("null")
+
+  restaurant_id String
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model menu_items {
+  id               String        @id @default(uuid()) @db.Uuid
+  item_name        String
+  item_description String?
+  item_price       String
+  images           String[]
+  available        Boolean       @default(true)
+  sub_category_id  String?       @db.Uuid
+  type             String        @default("veg")
+  sub_category     sub_category? @relation(fields: [sub_category_id], references: [id], onDelete: Cascade)
+  restaurant_id    String
+  restaurant       restaurant    @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+
+  c String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model sub_category {
+  id                String @id @default(uuid()) @db.Uuid
+  sub_category_name String
+
+  category_id String       @db.Uuid
+  category    category     @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  menu_items  menu_items[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model category {
+  id            String         @id @default(uuid()) @db.Uuid
+  category_name String         @unique
+  restaurant_id String
+  restaurant    restaurant     @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  sub_category  sub_category[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
