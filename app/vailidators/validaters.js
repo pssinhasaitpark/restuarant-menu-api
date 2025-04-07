@@ -88,18 +88,21 @@ exports.categorySchema = Joi.object({
     description: Joi.string().optional()
 });
 
-exports.menuItemSchema = Joi.object({
-    item_name: Joi.string().required()
-        .messages({
-            "string.empty": "Category name cannot be empty."
-        }),
 
-    item_description: Joi.string().optional(),
-    item_price: Joi.string().optional(),
-    category_name: Joi.string().optional(),
-    sub_category_name: Joi.string().optional()
 
-});
+exports.menuItemSchema = Joi.array().items(
+    Joi.object({
+        item_name: Joi.string().required()
+            .messages({
+                "string.empty": "Item name cannot be empty."
+            }),
+
+        item_description: Joi.string().optional(),
+        item_price: Joi.string().optional(),
+        category_name: Joi.string().optional(),
+        sub_category_name: Joi.string().optional()
+    })
+);
 
 exports.tableSchema = Joi.object({
     table_number: Joi.string().required(),
