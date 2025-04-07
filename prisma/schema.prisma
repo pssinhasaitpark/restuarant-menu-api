@@ -13,28 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model restaurant {
-//   id              String         @id @default(uuid())
-//   role_type       String         @default("restaurant_admin")
-//   restaurant_name String?
-//   owner_name      String?
-//   email           String         @unique
-//   password        String
-//   mobile          String
-//   opening_time    String?        @default("open _time")
-//   closing_time    String?        @default("close time")
-//   location        String?
-//   logo            String         @default("logo url")
-//   type            restaurantType @default(veg)
-//   images          String[]
-//   createdAt       DateTime       @default(now())
-//   updatedAt       DateTime       @updatedAt
-
-//   tables     table[]
-//   bookings   booking[]
-//   menu_items menu_items[]
-//   category   category[]
-// }
 model restaurant {
   id              String         @id @default(uuid())
   role_type       String         @default("restaurant_admin")
@@ -43,22 +21,21 @@ model restaurant {
   email           String         @unique
   password        String
   mobile          String
-  opening_time    String?       
-  closing_time    String?       
+  opening_time    String?
+  closing_time    String?
   location        String?
   logo            String         @default("logo url")
   type            restaurantType @default(veg)
   images          String[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  qr_code_url     String?       
-
-  tables     table[]
-  bookings   booking[]
-  menu_items menu_items[]
-  category   category[]
+  qr_code_url     String?
+  wishlist        Boolean        @default(false)
+  tables          table[]
+  bookings        booking[]
+  menu_items      menu_items[]
+  category        category[]
 }
-
 
 enum restaurantType {
   veg
@@ -100,41 +77,32 @@ model booking {
 }
 
 model menu_items {
-  id               String        @id @default(uuid()) @db.Uuid
+  id               String     @id @default(uuid()) @db.Uuid
   item_name        String
   item_description String?
   item_price       String
   images           String[]
-  available        Boolean       @default(true)
-  sub_category_id  String?       @db.Uuid
-  type             String        @default("veg")
-  sub_category     sub_category? @relation(fields: [sub_category_id], references: [id], onDelete: Cascade)
+  available        Boolean    @default(true)
+  category_id      String     @db.Uuid
+  type             String     @default("veg")
+  category         category   @relation(fields: [category_id], references: [id], onDelete: Cascade) 
   restaurant_id    String
-  restaurant       restaurant    @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-  c String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model sub_category {
-  id                String @id @default(uuid()) @db.Uuid
-  sub_category_name String
-
-  category_id String       @db.Uuid
-  category    category     @relation(fields: [category_id], references: [id], onDelete: Cascade)
-  menu_items  menu_items[]
+  restaurant       restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+
 model category {
-  id            String         @id @default(uuid()) @db.Uuid
-  category_name String         @unique
+  id            String       @id @default(uuid()) @db.Uuid
+  category_name String
   restaurant_id String
-  restaurant    restaurant     @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-  sub_category  sub_category[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  restaurant    restaurant   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  menu_items    menu_items[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([category_name, restaurant_id])
 }

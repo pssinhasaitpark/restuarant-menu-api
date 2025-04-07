@@ -4,7 +4,7 @@ const router = express.Router();
 const { restaurant } = require("../../controllers")
 const { upload } = require('../../middlewares/upload');
 
-const { verifyToken, verifyRole} = require('../../middlewares/jwtAuth');
+const { verifyToken, verifyRole } = require('../../middlewares/jwtAuth');
 
 
 router.post("/create", upload, restaurant.addRestaurant);
@@ -19,10 +19,16 @@ router.delete("/:id", restaurant.deleteRestaurant);
 
 router.get("/customers", verifyToken, restaurant.getRestaurantCustomers)
 
+router.get("/wishlist", restaurant.getWishlist);
+
 router.get("/:id", restaurant.getRestaurentById);
 
 router.post("/login", restaurant.login, verifyRole);
 
-router.get("/", restaurant.getAllRestaurent)
+router.put("/wishlist/:restaurant_id", restaurant.addWishlist)
+
+
+router.get("/", restaurant.getAllRestaurent);
+
 
 module.exports = router;

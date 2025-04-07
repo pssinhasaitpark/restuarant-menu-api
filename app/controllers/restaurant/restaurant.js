@@ -251,6 +251,7 @@ exports.getRestaurantCustomers = async (req, res) => {
 
 exports.getRestaurentById = async (req, res) => {
     try {
+
         const { id } = req.params;
         const data = await prisma.restaurant.findMany({
             where: {
@@ -289,5 +290,59 @@ exports.me = async (req, res) => {
     } catch (error) {
         console.log(error)
         return handleResponse(res, 500, "Error in fetching  details", error.message);
+    }
+}
+
+exports.addWishlist = async (req, res) => {
+    const { restaurant_id } = req.params;
+
+    try {
+
+        const restaurant = await prisma.restaurant.findUnique({
+            where: { id: restaurant_id },
+        });
+
+        if (!restaurant) {
+            return handleResponse(res, 404, 'Restaurant not found!');
+        }
+
+
+        const updatedRestaurant = await prisma.restaurant.update({
+            where: { id: restaurant_id },
+            data: {
+                wishlist: !restaurant.wishlist,
+            },
+        });
+
+        return handleResponse(
+            res,
+            200,
+            updatedRestaurant.wishlist ? 'Restaurant added to wishlist!' : 'Restaurant removed from wishlist!',
+            updatedRestaurant
+        );
+    } catch (err) {
+        console.error(err);
+        return handleResponse(res, 500, 'Something went wrong while toggling the wishlist status');
+    }
+};
+
+
+exports.getWishlist=async(req,res)=>{
+    try {
+
+        const data = await prisma.restaurant.findMany({
+            where: {
+                wishlist:true,
+                role_type: { not: 'super_admin' },
+            }
+        });
+
+        if (!data || data.length === 0) {
+            return handleResponse(res, 404, " Wishlist is empty");
+        }
+
+        return handleResponse(res, 200, "WishList restaurent fetched successfully!", data);
+    } catch (error) {
+        return handleResponse(res, 500, "Error fetching WishList restaurant details", error.message);
     }
 }

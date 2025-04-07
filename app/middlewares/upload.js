@@ -4,7 +4,6 @@ const fs = require("fs");
 const sharp = require("sharp");
 
 
-
 const upload = (req, res, next) => {
   const BASE_PATH = path.join(__dirname, "../uploads");
 
@@ -23,6 +22,7 @@ const upload = (req, res, next) => {
   });
 
   const fileFilter = (req, file, cb) => {
+   
     cb(null, true);
   };
 
@@ -32,13 +32,30 @@ const upload = (req, res, next) => {
     fileFilter: fileFilter,
   });
 
+  const allowedFields = ["images", "logo"];
+
   upload.fields([
     { name: "images", maxCount: 10 },
     { name: "logo", maxCount: 10 }
 
+   
   ])(req, res, async (err) => {
+
     if (err) {
+      console.log("err===", err);
       return res.status(400).send({ message: "File upload failed." });
+    }
+
+    if (req.files) {
+      const unexpectedFields = Object.keys(req.files).filter(
+        (key) => !allowedFields.includes(key)
+      );
+
+      if (unexpectedFields.length > 0) {
+        return res.status(400).send({
+          message: `Unexpected file fields: ${unexpectedFields.join(", ")}`,
+        });
+      }
     }
 
     if (!req.files || Object.keys(req.files).length === 0) {
@@ -62,10 +79,9 @@ const upload = (req, res, next) => {
             .webp({ quality: 80 })
             .toFile(webpFilePath);
 
-          fs.unlinkSync(uploadedFilePath);
+          fs.unlinkSync(uploadedFilePath); 
 
           const convertedFileUrl = `${process.env.IMAGEURL}${webpFileName}`;
-
           convertedFilePaths.push(convertedFileUrl);
         }
 
