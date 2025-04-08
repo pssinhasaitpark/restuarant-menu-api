@@ -85,14 +85,13 @@ model menu_items {
   available        Boolean    @default(true)
   category_id      String     @db.Uuid
   type             String     @default("veg")
-  category         category   @relation(fields: [category_id], references: [id], onDelete: Cascade) 
+  category         category   @relation(fields: [category_id], references: [id], onDelete: Cascade)
   restaurant_id    String
   restaurant       restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model category {
   id            String       @id @default(uuid()) @db.Uuid
@@ -105,4 +104,13 @@ model category {
   updatedAt DateTime @updatedAt
 
   @@unique([category_name, restaurant_id])
+}
+
+model support {
+  id       String @id @default(uuid()) @db.Uuid
+  name     String
+  email    String
+  phone_no String
+  subject  String
+  issues   String
 }

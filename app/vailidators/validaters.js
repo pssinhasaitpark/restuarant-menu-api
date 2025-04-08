@@ -77,8 +77,6 @@ exports.bookingSchema = Joi.object({
 
 });
 
-
-
 exports.categorySchema = Joi.object({
     name: Joi.string().required()
         .messages({
@@ -87,7 +85,6 @@ exports.categorySchema = Joi.object({
 
     description: Joi.string().optional()
 });
-
 
 
 exports.menuItemSchema = Joi.array().items(
@@ -108,6 +105,7 @@ exports.tableSchema = Joi.object({
     table_number: Joi.string().required(),
     capacity: Joi.string().required()
 });
+
 exports.forgatePasswordSchema = Joi.object({
     email: Joi.string().required()
 })

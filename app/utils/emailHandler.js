@@ -1,9 +1,8 @@
 const nodemailer = require("nodemailer");
 
 
-exports.sendNewPostEmail = async (emails, postTitle) => {
+exports.sendSupportConnectingMail = async (userEmail) => {
   try {
-    
     const transporter = nodemailer.createTransport({
       service: "gmail",
       port: 465,
@@ -13,11 +12,10 @@ exports.sendNewPostEmail = async (emails, postTitle) => {
       },
     });
 
-    
     const mailOptions = {
       from: "casoji6215@jarars.com",
-      to: emails.join(", "),
-      subject: `✨ Checkout New Post `,
+      to: userEmail,
+      subject: `Thank you for connecting!`,
       html: `
         <html>
           <head>
@@ -54,19 +52,6 @@ exports.sendNewPostEmail = async (emails, postTitle) => {
                 color: #34495e;
                 margin-bottom: 20px;
               }
-              .cta-button {
-                display: inline-block;
-                padding: 10px 20px;
-                font-size: 16px;
-                color: #ffffff;
-                background-color: #3498db;
-                border-radius: 5px;
-                text-decoration: none;
-                text-align: center;
-              }
-              .cta-button:hover {
-                background-color: #2980b9;
-              }
               .footer {
                 font-size: 12px;
                 color: #7f8c8d;
@@ -77,30 +62,26 @@ exports.sendNewPostEmail = async (emails, postTitle) => {
           </head>
           <body>
             <div class="container">
-              <div class="header">✨ New Post! </div>
+              <div class="header">Thank You for Connecting!</div>
               <p>Hello,</p>
-              <p>We are excited to inform you that a new <strong>content</strong>  <strong>${postTitle}</strong> has been posted.</p>
-              <p>You can view the content by clicking the button below:</p>
-              <div style="text-align: center;">
-                <a href="http://82.29.167.130:3000" class="cta-button">View Now</a>
-              </div>
-              <p>Thank you for staying connected with <strong>Ambedkar Janmbhoomi Trust</strong>.</p>
-              <p class="footer">© 2025 Ambedkar Janmbhoomi Trust | All Rights Reserved</p>
+              <p>Thank you for reaching out to us. We have received your request, and our team will get back to you shortly.</p>
+              <p>We appreciate your patience and look forward to assisting you!</p>
+              <p class="footer">© 2025 Restaurent Management Systemexit
+               | All Rights Reserved</p>
             </div>
           </body>
         </html>
       `,
     };
-    
-  
-    
-    
 
     await transporter.sendMail(mailOptions);
+    console.log('Thank you email sent successfully!');
   } catch (err) {
-    console.error("Error sending post email:", err);
+    console.error("Error sending thank you email:", err);
   }
 };
+
+
 
 exports.sendResetEmail = async (email, resetToken) => {
   try {

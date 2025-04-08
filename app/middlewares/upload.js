@@ -81,7 +81,7 @@ const upload = (req, res, next) => {
 
           fs.unlinkSync(uploadedFilePath); 
 
-          const convertedFileUrl = `${process.env.IMAGEURL}${webpFileName}`;
+          const convertedFileUrl = `${process.env.IMAGEURL}image/${webpFileName}`;
           convertedFilePaths.push(convertedFileUrl);
         }
 

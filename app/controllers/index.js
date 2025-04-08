@@ -3,5 +3,6 @@ module.exports = {
     table:require('./restaurant/table'),
     booking:require('./restaurant/booking'),
     menu_management:require('./restaurant/menu_management'),
+    support:require('./restaurant/support')
 
 }
