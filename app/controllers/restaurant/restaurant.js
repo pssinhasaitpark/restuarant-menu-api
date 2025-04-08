@@ -160,6 +160,9 @@ exports.updateRestaurant = async (req, res) => {
             imageUrls = [...imageUrls, ...req.convertedFiles.images];
         }
 
+     const logoImageUrl = (req.convertedFiles && req.convertedFiles.logo && req.convertedFiles.logo[0]);
+
+
         const updatedData = {
             restaurant_name: restaurant_name || restaurant.restaurant_name,
             owner_name: owner_name || restaurant.owner_name,
@@ -170,6 +173,7 @@ exports.updateRestaurant = async (req, res) => {
             closing_time: closing_time || restaurant.closing_time,
             location: location || restaurant.location,
             type: type || restaurant.type,
+            logo:logoImageUrl ||restaurant.logo,
             images: imageUrls
         };
 

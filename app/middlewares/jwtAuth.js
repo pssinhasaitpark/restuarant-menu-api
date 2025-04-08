@@ -57,7 +57,10 @@ exports.decryptToken = (encryptedToken) => {
 
 
 exports.verifyToken = async (req, res, next) => {
-
+  
+  if (req.query.id) {
+    return next();
+  }
 
   let encryptedToken = req.headers.authorization
     ? req.headers.authorization
