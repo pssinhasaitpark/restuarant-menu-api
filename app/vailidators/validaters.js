@@ -75,7 +75,14 @@ exports.bookingSchema = Joi.object({
     date: Joi.string().required(),
     instruction: Joi.string().optional(),
 
+    // Adding menu_items as an optional array of strings (menu item IDs)
+    menu_items: Joi.array().items(Joi.string().required()).optional()
+        .messages({
+            "array.base": "Menu items must be an array of valid item IDs.",
+            "string.base": "Each menu item must be a string."
+        }),
 });
+
 
 exports.categorySchema = Joi.object({
     name: Joi.string().required()
