@@ -54,6 +54,28 @@ model table {
   bookings      booking[]
 }
 
+/**
+ * model booking {
+ * id                String  @id @default(uuid()) @db.Uuid
+ * customer_name     String
+ * contact_no        String
+ * num_of_people     Int
+ * booking_time      String
+ * date              String
+ * total_charge      Int
+ * instruction       String?
+ * status            String  @default("pending")
+ * payment_status    String  @default("pending")
+ * table_id          String  @db.Uuid
+ * table             table   @relation(fields: [table_id], references: [id], onDelete: Cascade)
+ * razorpay_order_id String  @default("null")
+ * payement_id       String  @default("null")
+ * restaurant_id String
+ * restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+ * createdAt     DateTime   @default(now())
+ * updatedAt     DateTime   @updatedAt
+ * }
+ */
 model booking {
   id                String  @id @default(uuid()) @db.Uuid
   customer_name     String
@@ -65,15 +87,20 @@ model booking {
   instruction       String?
   status            String  @default("pending")
   payment_status    String  @default("pending")
-  table_id          String  @db.Uuid
-  table             table   @relation(fields: [table_id], references: [id], onDelete: Cascade)
   razorpay_order_id String  @default("null")
-  payement_id       String  @default("null")
+  payment_id        String  @default("null")
+
+  token_number String?
+
+  table_id String @db.Uuid
+  table    table  @relation(fields: [table_id], references: [id], onDelete: Cascade)
 
   restaurant_id String
   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+
+  menu_items menu_items[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 }
 
 model menu_items {
@@ -82,15 +109,14 @@ model menu_items {
   item_description String?
   item_price       String
   images           String[]
-  available        Boolean    @default(true)
   category_id      String     @db.Uuid
   type             String     @default("veg")
   category         category   @relation(fields: [category_id], references: [id], onDelete: Cascade)
   restaurant_id    String
   restaurant       restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  bookings         booking[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 }
 
 model category {

@@ -64,7 +64,9 @@ exports.addTable = async (req, res) => {
 };
 
 exports.availableTables = async (req, res) => {
-    const restaurantId = req.user.restaurant_id;
+
+    const restaurantId = req.query.id || req.user.restaurant_id;
+
     try {
         const availableTables = await prisma.table.findMany({
             where: {
