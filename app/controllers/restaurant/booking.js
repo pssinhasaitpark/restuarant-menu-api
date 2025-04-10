@@ -5,190 +5,16 @@ const prisma = new PrismaClient();
 const razorpayInstance = require('../../utils/razorpay');
 const crypto = require('crypto');
 
-/*
-exports.bookingTable = async (req, res) => {
-  try {
 
-    const { error } = bookingSchema.validate(req.body);
-    if (error) {
-      return handleResponse(res, 400, error.details[0].message);
-    }
-
-    const { customer_name, contact_no, table_number, num_of_people, booking_time, instruction, date } = req.body;
-
-
-    const table = await prisma.table.findUnique({
-      where: {
-        table_number: table_number
-      }
-    });
-
-    if (!table) {
-      return handleResponse(res, 404, 'Table not found.');
-    }
-
-    if (table.status === 'booked') {
-      return handleResponse(res, 400, 'Table is already booked.');
-    }
-
-    const totalCharge = table.cover_charges * num_of_people;
-
-
-    // await prisma.table.update({
-    //   where: { table_number: table_number },
-    //   data: {
-    //     status: 'booked',
-    //   }
-    // });
-
-
-
-    const orderOptions = {
-      amount: totalCharge * 100,
-      currency: "INR",
-      receipt: `booking_receipt_${new Date().getTime()}`,
-      payment_capture: 1,
-    };
-
-    const order = await razorpayInstance.orders.create(orderOptions);
-
-    if (!order) {
-      return handleResponse(res, 500, "Error creating Razorpay order");
-    }
-
-
-    const newBooking = await prisma.booking.create({
-      data: {
-        customer_name: customer_name,
-        contact_no: contact_no,
-        num_of_people: num_of_people,
-        booking_time: booking_time,
-        date: date,
-        total_charge: totalCharge,
-        instruction: instruction,
-        status: 'pending',
-        table: { connect: { id: table.id } },
-        restaurant: { connect: { id: table.restaurant_id } },
-        razorpay_order_id: order.id,
-      }
-    });
-
-
-    return handleResponse(res, 201, 'Table booking initiated successfully. Proceed to payment.', newBooking);
-
-  } catch (err) {
-    console.error(err);
-    return handleResponse(res, 500, 'Error in booking table');
-  }
-};
 
 
 exports.bookingTable = async (req, res) => {
   try {
-    const { error } = bookingSchema.validate(req.body);
-    if (error) {
-      return handleResponse(res, 400, error.details[0].message);
-    }
-
-    const { customer_name, contact_no, table_number, num_of_people, booking_time, instruction, date, menu_items } = req.body;
-
-    const table = await prisma.table.findUnique({
-      where: {
-        table_number: table_number
-      }
-    });
-
-    if (!table) {
-      return handleResponse(res, 404, 'Table not found.');
-    }
-
-    if (table.status === 'booked') {
-      return handleResponse(res, 400, 'Table is already booked.');
-    }
-
-    let totalCharge = 0;
-    let selectedMenuItems = [];
-    let tokenCounter = 0;
-
     
-    if (menu_items && menu_items.length > 0) {
-      const menuItemDetails = await prisma.menu_items.findMany({
-        where: {
-          id: { in: menu_items }
-        }
-      });
-
-      selectedMenuItems = menuItemDetails;
-      totalCharge += menuItemDetails.reduce((sum, item) => sum + parseInt(item.item_price), 0); 
-
-      
-      tokenCounter += 1;
-    } else {
-      
-      totalCharge = table.cover_charges * num_of_people; 
-    }
-
-   
-    const orderOptions = {
-      amount: totalCharge * 100,
-      currency: "INR",
-      receipt: `booking_receipt_${new Date().getTime()}`,
-      payment_capture: 1,
-    };
-
-    const order = await razorpayInstance.orders.create(orderOptions);
-
-    if (!order) {
-      return handleResponse(res, 500, "Error creating Razorpay order");
-    }
-
-    
-    const newBookingData = {
-      customer_name: customer_name,
-      contact_no: contact_no,
-      num_of_people: num_of_people,
-      booking_time: booking_time,
-      date: date,
-      total_charge: totalCharge,
-      instruction: instruction,
-      status: 'pending',
-      table: { connect: { id: table.id } },
-      restaurant: { connect: { id: table.restaurant_id } },
-      razorpay_order_id: order.id,
-    };
-
-   
-    if (selectedMenuItems.length > 0) {
-      newBookingData.token_number = `token-${tokenCounter}`;  
-    }
-
-
-    if (selectedMenuItems.length > 0) {
-      newBookingData.menu_items = {
-        connect: selectedMenuItems.map(item => ({ id: item.id }))
-      };
-    }
-
-
-    const newBooking = await prisma.booking.create({
-      data: newBookingData
-    });
-
-    return handleResponse(res, 201, 'Table booking initiated successfully. Proceed to payment.', newBooking);
-
-  } catch (err) {
-    console.error(err);
-    return handleResponse(res, 500, 'Error in booking table');
-  }
-};*/
-
-
-exports.bookingTable = async (req, res) => {
-  try {
-    const { error } = bookingSchema.validate(req.body);
-    if (error) {
-      return handleResponse(res, 400, error.details[0].message);
-    }
+    // const { error } = bookingSchema.validate(req.body);
+    // if (error) {
+    //   return handleResponse(res, 400, error.details[0].message);
+    // }
 
     const restaurant_id = req.query.id;
 
@@ -198,7 +24,6 @@ exports.bookingTable = async (req, res) => {
 
     const { customer_name, contact_no, table_number, num_of_people, booking_time, instruction, date, menu_items } = req.body;
 
-    // Validate the restaurant ID and fetch the restaurant details
     const restaurant = await prisma.restaurant.findUnique({
       where: {
         id: restaurant_id
@@ -209,13 +34,13 @@ exports.bookingTable = async (req, res) => {
       return handleResponse(res, 404, 'Restaurant not found.');
     }
 
-    // Fetch the table in the correct restaurant
+   
     const table = await prisma.table.findUnique({
       where: {
         table_number: table_number
       },
       include: {
-        restaurant: true // Include the related restaurant to match with the restaurant_id in the request
+        restaurant: true 
       }
     });
 
@@ -227,7 +52,6 @@ exports.bookingTable = async (req, res) => {
       return handleResponse(res, 400, 'Table is already booked.');
     }
 
-    // Check if the table belongs to the specified restaurant
     if (table.restaurant_id !== restaurant.id) {
       return handleResponse(res, 400, 'Table does not belong to the specified restaurant.');
     }
@@ -236,13 +60,12 @@ exports.bookingTable = async (req, res) => {
     let selectedMenuItems = [];
     let tokenCounter = 0;
 
-    // If menu items are selected, validate them and calculate the total charge
     if (menu_items && menu_items.length > 0) {
-      // Ensure all menu items belong to the correct restaurant
+    
       const menuItemDetails = await prisma.menu_items.findMany({
         where: {
           id: { in: menu_items },
-          restaurant_id: restaurant.id // Ensure they belong to the correct restaurant
+          restaurant_id: restaurant.id 
         }
       });
 
@@ -258,9 +81,8 @@ exports.bookingTable = async (req, res) => {
       totalCharge = table.cover_charges * num_of_people;
     }
 
-    // Create Razorpay order
     const orderOptions = {
-      amount: totalCharge * 100, // Amount in paise
+      amount: totalCharge * 100, 
       currency: "INR",
       receipt: `booking_receipt_${new Date().getTime()}`,
       payment_capture: 1,
@@ -272,7 +94,6 @@ exports.bookingTable = async (req, res) => {
       return handleResponse(res, 500, "Error creating Razorpay order");
     }
 
-    // Prepare new booking data
     const newBookingData = {
       customer_name: customer_name,
       contact_no: contact_no,
@@ -287,7 +108,6 @@ exports.bookingTable = async (req, res) => {
       razorpay_order_id: order.id,
     };
 
-    // If menu items are selected, add them to the booking
     if (selectedMenuItems.length > 0) {
       newBookingData.token_number = `token-${tokenCounter}`;
       newBookingData.menu_items = {
@@ -295,7 +115,7 @@ exports.bookingTable = async (req, res) => {
       };
     }
 
-    // Create the booking record in the database
+    
     const newBooking = await prisma.booking.create({
       data: newBookingData
     });
@@ -307,8 +127,6 @@ exports.bookingTable = async (req, res) => {
     return handleResponse(res, 500, 'Error in booking table');
   }
 };
-
-
 
 
 exports.cancelBooking = async (req, res) => {
@@ -347,6 +165,7 @@ exports.cancelBooking = async (req, res) => {
     return handleResponse(res, 500, 'Error in cancelling booking');
   }
 };
+
 
 exports.updateBookingTime = async (req, res) => {
   try {
@@ -453,52 +272,7 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-/*
-exports.verifyBookingPayment = async (req, res) => {
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
 
-  const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest('hex');
-
-  if (generatedSignature === razorpay_signature) {
-    try {
-      const payment = await razorpayInstance.payments.fetch(razorpay_payment_id);
-
-      if (payment.status === 'captured' && payment.order_id === razorpay_order_id) {
-        const booking = await prisma.booking.findUnique({ where: { razorpay_order_id } });
-
-        if (booking) {
-          booking.status = 'confirmed';
-          booking.payment_status = 'completed';
-          booking.payement_id = razorpay_payment_id;
-          await prisma.booking.update({
-            where: { id: booking.id },
-            data: booking
-          });
-
-          await prisma.table.update({
-            where: { id: booking.table_id },
-            data: { status: 'booked' }
-          });
-
-          return handleResponse(res, 200, "Payment verified and table booking confirmed");
-        } else {
-          return handleResponse(res, 404, "Booking not found for the provided orderId");
-        }
-      } else {
-        return handleResponse(res, 400, "Payment not captured or incorrect order ID");
-      }
-    } catch (error) {
-      console.error('Error fetching payment details:', error);
-      return handleResponse(res, 500, "Error verifying payment", error.message);
-    }
-  } else {
-    return handleResponse(res, 400, "Signature mismatch");
-  }
-};
-*/
 exports.verifyBookingPayment = async (req, res) => {
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
 

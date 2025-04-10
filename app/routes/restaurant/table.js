@@ -10,7 +10,7 @@ router.post("/",verifyToken,table.addTable);
 
 router.get("/availables",verifyToken,table.availableTables)
 
-router.get("/:tableNumber",verifyToken,table.getTableByNumber);
+router.get("/:id",verifyToken,table.getTableId);
 
 router.get("/",verifyToken,table.getAllTableDetails)
 

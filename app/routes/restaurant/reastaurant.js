@@ -9,11 +9,11 @@ const { verifyToken, verifyRole } = require('../../middlewares/jwtAuth');
 
 router.post("/create", upload, restaurant.addRestaurant);
 
-router.post("/super_admin", upload, restaurant.superAdminRegister);
+router.post("/superAdmin", upload, restaurant.superAdminRegister);
 
 router.get("/me", verifyToken, restaurant.me);
 
-router.put("/:restaurant_id", upload, verifyToken, restaurant.updateRestaurant);
+router.put("/:restaurantId", upload,verifyToken, restaurant.updateRestaurant);
 
 router.delete("/:id", restaurant.deleteRestaurant);
 
@@ -25,7 +25,7 @@ router.get("/:id", restaurant.getRestaurentById);
 
 router.post("/login", restaurant.login, verifyRole);
 
-router.put("/wishlist/:restaurant_id", restaurant.addWishlist)
+router.put("/wishlist/:restaurantId", restaurant.addWishlist)
 
 
 router.get("/", restaurant.getAllRestaurent);

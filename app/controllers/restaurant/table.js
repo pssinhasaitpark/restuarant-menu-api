@@ -85,13 +85,14 @@ exports.availableTables = async (req, res) => {
     }
 };
 
-exports.getTableByNumber = async (req, res) => {
+exports.getTableId = async (req, res) => {
+    
     const restaurantId = req.user.restaurant_id;
     try {
-        const { tableNumber } = req.params;
+        const { id } = req.params;
         const table = await prisma.table.findUnique({
             where: {
-                table_number: tableNumber,
+                id: id,
                 restaurant_id: restaurantId
             }
         });
