@@ -483,14 +483,14 @@ exports.getAllCategories = async (req, res) => {
 
 
 exports.deleteCategory = async (req, res) => {
-    const { category_id } = req.params;
+    const { categoryId } = req.params;
     const restaurantId = req.user.restaurant_id;
 
     try {
 
         const category = await prisma.category.findFirst({
             where: {
-                id: category_id,
+                id: categoryId,
                 restaurant_id: restaurantId
             }
         });
@@ -502,7 +502,7 @@ exports.deleteCategory = async (req, res) => {
 
         await prisma.category.delete({
             where: {
-                id: category_id
+                id: categoryId
             }
         });
 
@@ -515,13 +515,13 @@ exports.deleteCategory = async (req, res) => {
 
 
 exports.deleteMenuItems = async (req, res) => {
-    const { menu_item_id } = req.params;
+    const { menuItemId } = req.params;
     const restaurantId = req.user.restaurant_id;
     try {
 
         const menuItem = await prisma.menu_items.findFirst({
             where: {
-                id: menu_item_id,
+                id: menuItemId,
                 restaurant_id: restaurantId
             }
         });
@@ -532,7 +532,7 @@ exports.deleteMenuItems = async (req, res) => {
 
         await prisma.menu_items.delete({
             where: {
-                id: menu_item_id
+                id: menuItemId
             }
         });
 
@@ -545,7 +545,7 @@ exports.deleteMenuItems = async (req, res) => {
 
 
 exports.updateCategory = async (req, res) => {
-    const { category_id } = req.params;
+    const { categoryId } = req.params;
     const { category_name } = req.body;
     const restaurantId = req.user.restaurant_id;
 
@@ -553,7 +553,7 @@ exports.updateCategory = async (req, res) => {
         // Check if the category exists
         const category = await prisma.category.findFirst({
             where: {
-                id: category_id,
+                id: categoryId,
                 restaurant_id: restaurantId
             }
         });
@@ -577,7 +577,7 @@ exports.updateCategory = async (req, res) => {
         // Update the category name
         const updatedCategory = await prisma.category.update({
             where: {
-                id: category_id
+                id: categoryId
             },
             data: {
                 category_name: category_name
@@ -593,7 +593,7 @@ exports.updateCategory = async (req, res) => {
 
 
 exports.updateMenuItem = async (req, res) => {
-    const { menu_item_id } = req.params;
+    const { menuItemId } = req.params;
     const { category_name, items } = req.body;
 
     const restaurantId = req.user.restaurant_id;
@@ -601,7 +601,7 @@ exports.updateMenuItem = async (req, res) => {
     try {
         const menuItem = await prisma.menu_items.findFirst({
             where: {
-                id: menu_item_id,
+                id: menuItemId,
                 restaurant_id: restaurantId
             }
         });
@@ -632,7 +632,7 @@ exports.updateMenuItem = async (req, res) => {
                 }
             });
 
-            if (existingItem && existingItem.id !== menu_item_id) {
+            if (existingItem && existingItem.id !== menuItemId) {
                 return handleResponse(res, 400, 'Menu item with this name already exists in the selected category.');
             }
 
@@ -646,7 +646,7 @@ exports.updateMenuItem = async (req, res) => {
 
             const updatedMenuItem = await prisma.menu_items.update({
                 where: {
-                    id: menu_item_id
+                    id: menuItemId
                 },
                 data: {
                     item_name: item_name,
@@ -667,16 +667,16 @@ exports.updateMenuItem = async (req, res) => {
 
 
 exports.getMenuItemById = async (req, res) => {
-    const { menu_item_id } = req.params;
+    const { menuItemId } = req.params;
 
-    if (!menu_item_id) {
+    if (!menuItemId) {
         return handleResponse(res, 400, 'Menu item ID is required');
     }
 
     try {
         const menuItem = await prisma.menu_items.findUnique({
             where: {
-                id: menu_item_id
+                id: menuItemId
             },
             select: {
                 id: true,

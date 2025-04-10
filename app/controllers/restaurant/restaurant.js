@@ -114,21 +114,91 @@ exports.login = async (req, res, next) => {
     }
 };
 
+// exports.getAllRestaurent = async (req, res) => {
+//     try {
+
+//         const data = await prisma.restaurant.findMany({
+//             where: {
+//                 role_type: { not: 'super_admin' }
+//             }
+//         });
+
+//         if (!data || data.length === 0) {
+//             return handleResponse(res, 404, "No restaurant found in the database");
+//         }
+
+//         return handleResponse(res, 200, "Restaurant details fetched successfully!", data);
+//     } catch (error) {
+//         return handleResponse(res, 500, "Error fetching restaurant details", error.message);
+//     }
+// };
+
 exports.getAllRestaurent = async (req, res) => {
     try {
+        const {
+            restaurant_name,
+            owner_name,
+            email,
+            type,
+            location,
+            wishlist,
+            created_from,
+            created_to
+        } = req.query;
+
+        // Build dynamic filters
+        let filters = {
+            role_type: { not: 'super_admin' }
+        };
+
+        if (restaurant_name) {
+            filters.restaurant_name = { contains: restaurant_name, mode: 'insensitive' };
+        }
+
+        if (owner_name) {
+            filters.owner_name = { contains: owner_name, mode: 'insensitive' };
+        }
+
+        if (email) {
+            filters.email = { contains: email, mode: 'insensitive' };
+        }
+
+        if (type) {
+            filters.type = type; // must be 'veg' or 'non_veg'
+        }
+
+        if (location) {
+            filters.location = { contains: location, mode: 'insensitive' };
+        }
+
+        if (wishlist !== undefined) {
+            filters.wishlist = wishlist === 'true';
+        }
+
+        if (created_from || created_to) {
+            filters.createdAt = {};
+            if (created_from) {
+                filters.createdAt.gte = new Date(created_from);
+            }
+            if (created_to) {
+                filters.createdAt.lte = new Date(created_to);
+            }
+        }
 
         const data = await prisma.restaurant.findMany({
-            where: {
-                role_type: { not: 'super_admin' }
+            where: filters,
+            orderBy: {
+                createdAt: 'desc'
             }
         });
 
         if (!data || data.length === 0) {
-            return handleResponse(res, 404, "No restaurant found in the database");
+            return handleResponse(res, 404, "No restaurant found matching the criteria");
         }
 
         return handleResponse(res, 200, "Restaurant details fetched successfully!", data);
     } catch (error) {
+        console.error(error);
         return handleResponse(res, 500, "Error fetching restaurant details", error.message);
     }
 };
@@ -136,17 +206,18 @@ exports.getAllRestaurent = async (req, res) => {
 
 
 
-
 exports.updateRestaurant = async (req, res) => {
+    // Check if user is a super_admin
+    if (req.user && req.user.role_type !== 'super_admin') {
+        return handleResponse(res, 403, 'Access Denied! Only super admin can update details');
+    }
 
-
-
-    const { restaurant_name, owner_name, email, password, mobile, opening_time, closing_time, location, type } = req.body;
-    const { restaurant_id } = req.params;
+    const { restaurant_name, owner_name, email, password, mobile, opening_time, closing_time, location, type } = req.body || {};
+    const { restaurantId } = req.params;
 
     try {
         const restaurant = await prisma.restaurant.findUnique({
-            where: { id: restaurant_id }
+            where: { id: restaurantId }
         });
 
         if (!restaurant) {
@@ -158,14 +229,13 @@ exports.updateRestaurant = async (req, res) => {
             hashedPassword = await bcrypt.hash(password, 10);
         }
 
-        let imageUrls = [];
+        let imageUrls = restaurant.images || []; 
 
-        if (req.convertedFiles && req.convertedFiles.images) {
-            imageUrls = [...imageUrls, ...req.convertedFiles.images];
+        if (req.convertedFiles && req.convertedFiles.images && req.convertedFiles.images.length > 0) {
+            imageUrls = [...req.convertedFiles.images]; 
         }
 
-     const logoImageUrl = (req.convertedFiles && req.convertedFiles.logo && req.convertedFiles.logo[0]);
-
+        const logoImageUrl = (req.convertedFiles && req.convertedFiles.logo && req.convertedFiles.logo[0]) || restaurant.logo;
 
         const updatedData = {
             restaurant_name: restaurant_name || restaurant.restaurant_name,
@@ -177,12 +247,12 @@ exports.updateRestaurant = async (req, res) => {
             closing_time: closing_time || restaurant.closing_time,
             location: location || restaurant.location,
             type: type || restaurant.type,
-            logo:logoImageUrl ||restaurant.logo,
-            images: imageUrls
+            logo: logoImageUrl, 
+            images: imageUrls 
         };
 
         const updatedRestaurant = await prisma.restaurant.update({
-            where: { id: restaurant_id },
+            where: { id: restaurantId },
             data: updatedData
         });
 
@@ -192,6 +262,7 @@ exports.updateRestaurant = async (req, res) => {
         return handleResponse(res, 500, 'Something went wrong while updating the restaurant');
     }
 };
+
 
 exports.deleteRestaurant = async (req, res) => {
     try {
@@ -302,12 +373,12 @@ exports.me = async (req, res) => {
 }
 
 exports.addWishlist = async (req, res) => {
-    const { restaurant_id } = req.params;
+    const { restaurantId } = req.params;
 
     try {
 
         const restaurant = await prisma.restaurant.findUnique({
-            where: { id: restaurant_id },
+            where: { id: restaurantId },
         });
 
         if (!restaurant) {
@@ -316,7 +387,7 @@ exports.addWishlist = async (req, res) => {
 
 
         const updatedRestaurant = await prisma.restaurant.update({
-            where: { id: restaurant_id },
+            where: { id: restaurantId },
             data: {
                 wishlist: !restaurant.wishlist,
             },
@@ -335,12 +406,12 @@ exports.addWishlist = async (req, res) => {
 };
 
 
-exports.getWishlist=async(req,res)=>{
+exports.getWishlist = async (req, res) => {
     try {
 
         const data = await prisma.restaurant.findMany({
             where: {
-                wishlist:true,
+                wishlist: true,
                 role_type: { not: 'super_admin' },
             }
         });

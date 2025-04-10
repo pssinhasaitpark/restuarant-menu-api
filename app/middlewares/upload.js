@@ -32,11 +32,13 @@ const upload = (req, res, next) => {
     fileFilter: fileFilter,
   });
 
-  const allowedFields = ["images", "logo"];
+  const allowedFields = ["images", "logo","profile_image"];
 
   upload.fields([
     { name: "images", maxCount: 10 },
-    { name: "logo", maxCount: 10 }
+    { name: "logo", maxCount: 10 },
+    { name: "profile_image", maxCount: 10 },
+    
 
    
   ])(req, res, async (err) => {

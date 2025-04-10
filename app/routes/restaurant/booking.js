@@ -7,7 +7,7 @@ const { verifyToken} = require('../../middlewares/jwtAuth');
 
 router.post("/", booking.bookingTable);
 
-router.post("/verify-payment", booking.verifyBookingPayment);
+router.post("/verifyPayment", booking.verifyBookingPayment);
 
 router.put("/:id", booking.cancelBooking);
 
