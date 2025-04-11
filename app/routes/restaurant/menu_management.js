@@ -20,7 +20,7 @@ router.delete("/menu_item/:menuItemId",verifyToken,menu_management.deleteMenuIte
 
 router.put("/category/:categoryId",verifyToken,menu_management.updateCategory);
 
-router.put("/menu_item/:menuItemId",verifyToken,upload,menu_management.updateMenuItem);
+router.put("/menuItem/:menuItemId",verifyToken,upload,menu_management.updateMenuItem);
 
 router.get("/:menuItemId",menu_management.getMenuItemById)
 

@@ -7,82 +7,121 @@ const crypto = require('crypto');
 
 
 
-
 exports.bookingTable = async (req, res) => {
   try {
-    
-    // const { error } = bookingSchema.validate(req.body);
-    // if (error) {
-    //   return handleResponse(res, 400, error.details[0].message);
-    // }
-
     const restaurant_id = req.query.id;
 
     if (!restaurant_id) {
       return handleResponse(res, 400, "Provide a restaurant id");
     }
 
-    const { customer_name, contact_no, table_number, num_of_people, booking_time, instruction, date, menu_items } = req.body;
+    const {
+      customer_name,
+      contact_no,
+      table_numbers,
+      num_of_people,
+      booking_time,
+      instruction,
+      date,
+      menu_items,
+    } = req.body;
+
+    if (!Array.isArray(table_numbers) || table_numbers.length === 0) {
+      return handleResponse(res, 400, "Provide at least one table number");
+    }
 
     const restaurant = await prisma.restaurant.findUnique({
-      where: {
-        id: restaurant_id
-      }
+      where: { id: restaurant_id },
     });
 
     if (!restaurant) {
-      return handleResponse(res, 404, 'Restaurant not found.');
+      return handleResponse(res, 404, "Restaurant not found.");
     }
 
-   
-    const table = await prisma.table.findUnique({
+    const tables = await prisma.table.findMany({
       where: {
-        table_number: table_number
+        table_number: { in: table_numbers },
+        restaurant_id: restaurant.id,
       },
-      include: {
-        restaurant: true 
-      }
     });
 
-    if (!table) {
-      return handleResponse(res, 404, 'Table not found.');
+    if (tables.length !== table_numbers.length) {
+      return handleResponse(
+        res,
+        400,
+        "One or more tables not found or don't belong to this restaurant."
+      );
     }
 
-    if (table.status === 'booked') {
-      return handleResponse(res, 400, 'Table is already booked.');
-    }
+    const alreadyBooked = tables.find((table) => table.status === "booked");
 
-    if (table.restaurant_id !== restaurant.id) {
-      return handleResponse(res, 400, 'Table does not belong to the specified restaurant.');
+    if (alreadyBooked) {
+      return handleResponse(
+        res,
+        400,
+        `Table ${alreadyBooked.table_number} is already booked.`
+      );
     }
 
     let totalCharge = 0;
     let selectedMenuItems = [];
-    let tokenCounter = 0;
+    let tokenNumber = null;
 
     if (menu_items && menu_items.length > 0) {
-    
+      const menuItemIds = menu_items.map((item) => item.id);
+
       const menuItemDetails = await prisma.menu_items.findMany({
         where: {
-          id: { in: menu_items },
-          restaurant_id: restaurant.id 
-        }
+          id: { in: menuItemIds },
+          restaurant_id: restaurant.id,
+        },
       });
 
       if (menuItemDetails.length !== menu_items.length) {
-        return handleResponse(res, 400, 'Some menu items do not belong to the specified restaurant.');
+        return handleResponse(
+          res,
+          400,
+          "Some menu items do not belong to the specified restaurant."
+        );
       }
 
-      selectedMenuItems = menuItemDetails;
-      totalCharge += menuItemDetails.reduce((sum, item) => sum + parseInt(item.item_price), 0);
+      totalCharge += menu_items.reduce((sum, item) => {
+        const menuItemDetail = menuItemDetails.find((mi) => mi.id === item.id);
+        return sum + parseInt(menuItemDetail.item_price) * item.quantity;
+      }, 0);
 
-      tokenCounter += 1;
+      selectedMenuItems = menuItemDetails;
+
+      const latestBookingWithToken = await prisma.booking.findFirst({
+        where: {
+          restaurant_id: restaurant.id,
+          token_number: { not: null },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          token_number: true,
+        },
+      });
+
+      if (latestBookingWithToken?.token_number) {
+        const lastTokenNum = parseInt(
+          latestBookingWithToken.token_number.split("-")[1] || "0"
+        );
+        tokenNumber = `token-${lastTokenNum + 1}`;
+      } else {
+        tokenNumber = "token-1";
+      }
     } else {
-      totalCharge = table.cover_charges * num_of_people;
+      totalCharge = tables.reduce(
+        (sum, t) => sum + t.cover_charges * num_of_people,
+        0
+      );
     }
 
     const orderOptions = {
-      amount: totalCharge * 100, 
+      amount: totalCharge * 100,
       currency: "INR",
       receipt: `booking_receipt_${new Date().getTime()}`,
       payment_capture: 1,
@@ -95,39 +134,47 @@ exports.bookingTable = async (req, res) => {
     }
 
     const newBookingData = {
-      customer_name: customer_name,
-      contact_no: contact_no,
-      num_of_people: num_of_people,
-      booking_time: booking_time,
-      date: date,
+      customer_name,
+      contact_no,
+      num_of_people,
+      booking_time,
+      date,
       total_charge: totalCharge,
-      instruction: instruction,
-      status: 'pending',
-      table: { connect: { id: table.id } },
+      instruction,
+      status: "pending",
       restaurant: { connect: { id: restaurant.id } },
       razorpay_order_id: order.id,
+      tables: {
+        connect: tables.map((table) => ({ id: table.id })),
+      },
     };
 
     if (selectedMenuItems.length > 0) {
-      newBookingData.token_number = `token-${tokenCounter}`;
+      newBookingData.token_number = tokenNumber;
       newBookingData.menu_items = {
-        connect: selectedMenuItems.map(item => ({ id: item.id }))
+        connect: selectedMenuItems.map((item) => ({ id: item.id })),
       };
     }
 
-    
     const newBooking = await prisma.booking.create({
-      data: newBookingData
+      data: newBookingData,
+      include: {
+        tables: true,
+        menu_items: true,
+      },
     });
 
-    return handleResponse(res, 201, 'Table booking initiated successfully. Proceed to payment.', newBooking);
-
+    return handleResponse(
+      res,
+      201,
+      "Table booking initiated successfully. Proceed to payment.",
+      newBooking
+    );
   } catch (err) {
     console.error(err);
-    return handleResponse(res, 500, 'Error in booking table');
+    return handleResponse(res, 500, "Error in booking table");
   }
 };
-
 
 exports.cancelBooking = async (req, res) => {
   try {
@@ -165,7 +212,6 @@ exports.cancelBooking = async (req, res) => {
     return handleResponse(res, 500, 'Error in cancelling booking');
   }
 };
-
 
 exports.updateBookingTime = async (req, res) => {
   try {
@@ -213,17 +259,14 @@ exports.updateBookingTime = async (req, res) => {
 
 
 exports.getAllBookings = async (req, res) => {
-
   const { role_type, restaurant_id } = req.user;
   try {
     let bookings;
 
-
     if (role_type === 'super_admin') {
-
       bookings = await prisma.booking.findMany({
         include: {
-          table: {
+          tables: {
             select: {
               table_number: true,
               capacity: true,
@@ -236,16 +279,16 @@ exports.getAllBookings = async (req, res) => {
               location: true,
             },
           },
+          menu_items: true, // Optional: only include if you want menu items too
         },
       });
     } else {
-
       bookings = await prisma.booking.findMany({
         where: {
           restaurant_id: restaurant_id,
         },
         include: {
-          table: {
+          tables: {
             select: {
               table_number: true,
               capacity: true,
@@ -258,9 +301,11 @@ exports.getAllBookings = async (req, res) => {
               location: true,
             },
           },
+          menu_items: true, // Optional
         },
       });
     }
+
     if (bookings.length === 0) {
       return handleResponse(res, 404, 'No bookings found.');
     }
@@ -272,8 +317,8 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-
 exports.verifyBookingPayment = async (req, res) => {
+
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
 
   const generatedSignature = crypto
@@ -286,25 +331,39 @@ exports.verifyBookingPayment = async (req, res) => {
       const payment = await razorpayInstance.payments.fetch(razorpay_payment_id);
 
       if (payment.status === 'captured' && payment.order_id === razorpay_order_id) {
-        const booking = await prisma.booking.findUnique({ where: { razorpay_order_id } });
+        const booking = await prisma.booking.findUnique({
+          where: { razorpay_order_id },
+          include: { tables: true }
+        });
 
         if (booking) {
-          booking.status = 'confirmed';
-          booking.payment_status = 'completed';
-          booking.payment_id = razorpay_payment_id;
+
           await prisma.booking.update({
             where: { id: booking.id },
-            data: booking
+            data: {
+              status: 'confirmed',
+              payment_status: 'completed',
+              payment_id: razorpay_payment_id
+            }
           });
 
-          await prisma.table.update({
-            where: { id: booking.table_id },
-            data: { status: 'booked' }
+          for (const table of booking.tables) {
+            await prisma.table.update({
+              where: { id: table.id },
+              data: { status: 'booked' }
+            });
+          }
+
+          const updatedBooking = await prisma.booking.findUnique({
+            where: { id: booking.id },
+            include: { tables: true }
           });
 
-          return handleResponse(res, 200, "Payment verified and table booking confirmed");
+
+
+          return handleResponse(res, 200, "Payment verified and table booking confirmed", updatedBooking);
         } else {
-          return handleResponse(res, 404, "Booking not found for the provided orderId");
+          return handleResponse(res, 404, "Booking not found for the provided order ID");
         }
       } else {
         return handleResponse(res, 400, "Payment not captured or incorrect order ID");

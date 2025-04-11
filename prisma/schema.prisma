@@ -36,12 +36,52 @@ model restaurant {
   menu_items      menu_items[]
   category        category[]
   staff           staff[]
+  rating          rating[]
 }
 
 enum restaurantType {
   veg
   non_veg
 }
+
+// model table {
+//   id            String @id @default(uuid()) @db.Uuid
+//   table_number  String @unique
+//   capacity      Int
+//   cover_charges Int    @default(30)
+//   status        String @default("free")
+
+//   restaurant_id String
+//   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+//   bookings      booking[]
+// }
+
+// model booking {
+//   id                String  @id @default(uuid()) @db.Uuid
+//   customer_name     String
+//   contact_no        String
+//   num_of_people     Int
+//   booking_time      String
+//   date              String
+//   total_charge      Int
+//   instruction       String?
+//   status            String  @default("pending")
+//   payment_status    String  @default("pending")
+//   razorpay_order_id String  @default("null")
+//   payment_id        String  @default("null")
+
+//   token_number String?
+
+//   table_id String @db.Uuid
+//   table    table  @relation(fields: [table_id], references: [id], onDelete: Cascade)
+
+//   restaurant_id String
+//   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+
+//   menu_items menu_items[]
+//   createdAt  DateTime     @default(now())
+//   updatedAt  DateTime     @updatedAt
+// }
 
 model table {
   id            String @id @default(uuid()) @db.Uuid
@@ -66,18 +106,15 @@ model booking {
   instruction       String?
   status            String  @default("pending")
   payment_status    String  @default("pending")
-  razorpay_order_id String  @default("null")
+  razorpay_order_id String  @unique @default("null")
   payment_id        String  @default("null")
-
-  token_number String?
-
-  table_id String @db.Uuid
-  table    table  @relation(fields: [table_id], references: [id], onDelete: Cascade)
+  token_number      String?
 
   restaurant_id String
   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
   menu_items menu_items[]
+  tables     table[]
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 }
@@ -143,3 +180,26 @@ model staff {
   updatedAt DateTime @updatedAt
 }
 
+model rating {
+  id            String     @id @default(uuid()) @db.Uuid
+  stars         Int
+  comment       String?
+  user_name     String
+  user_id       String
+  user          user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  restaurant_id String
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  createdAt     DateTime   @default(now())
+}
+
+model user {
+  id         String    @id @default(uuid())
+  user_name  String
+  email      String
+  mobile_no  String    @unique
+  role_type  String    @default("user")
+  createdAt  DateTime  @default(now())
+  otp        String?
+  otp_expiry DateTime?
+  rating     rating[]
+}
