@@ -142,6 +142,8 @@ exports.verifyRole = (req, res) => {
     responseMessage = 'Admin Login successfully!';
   } else if (role_type === 'restaurant_admin') {
     responseMessage = 'Restaurent Admin Login successfully!';
+  }else if (role_type === 'user') {
+    responseMessage = 'User Admin Login successfully!';
   }
 
   return handleResponse(res, 200, responseMessage, { encryptedToken, role_type });

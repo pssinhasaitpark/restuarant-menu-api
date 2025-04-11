@@ -51,7 +51,6 @@ CREATE TABLE "booking" (
     "razorpay_order_id" TEXT NOT NULL DEFAULT 'null',
     "payment_id" TEXT NOT NULL DEFAULT 'null',
     "token_number" TEXT,
-    "table_id" UUID NOT NULL,
     "restaurant_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -129,6 +128,14 @@ CREATE TABLE "_bookingTomenu_items" (
     CONSTRAINT "_bookingTomenu_items_AB_pkey" PRIMARY KEY ("A","B")
 );
 
+-- CreateTable
+CREATE TABLE "_bookingTotable" (
+    "A" UUID NOT NULL,
+    "B" UUID NOT NULL,
+
+    CONSTRAINT "_bookingTotable_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "restaurant_email_key" ON "restaurant"("email");
 
@@ -144,11 +151,11 @@ CREATE UNIQUE INDEX "staff_email_key" ON "staff"("email");
 -- CreateIndex
 CREATE INDEX "_bookingTomenu_items_B_index" ON "_bookingTomenu_items"("B");
 
--- AddForeignKey
-ALTER TABLE "table" ADD CONSTRAINT "table_restaurant_id_fkey" FOREIGN KEY ("restaurant_id") REFERENCES "restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "_bookingTotable_B_index" ON "_bookingTotable"("B");
 
 -- AddForeignKey
-ALTER TABLE "booking" ADD CONSTRAINT "booking_table_id_fkey" FOREIGN KEY ("table_id") REFERENCES "table"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "table" ADD CONSTRAINT "table_restaurant_id_fkey" FOREIGN KEY ("restaurant_id") REFERENCES "restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "booking" ADD CONSTRAINT "booking_restaurant_id_fkey" FOREIGN KEY ("restaurant_id") REFERENCES "restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -170,3 +177,9 @@ ALTER TABLE "_bookingTomenu_items" ADD CONSTRAINT "_bookingTomenu_items_A_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "_bookingTomenu_items" ADD CONSTRAINT "_bookingTomenu_items_B_fkey" FOREIGN KEY ("B") REFERENCES "menu_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_bookingTotable" ADD CONSTRAINT "_bookingTotable_A_fkey" FOREIGN KEY ("A") REFERENCES "booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_bookingTotable" ADD CONSTRAINT "_bookingTotable_B_fkey" FOREIGN KEY ("B") REFERENCES "table"("id") ON DELETE CASCADE ON UPDATE CASCADE;

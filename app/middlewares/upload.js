@@ -7,6 +7,7 @@ const sharp = require("sharp");
 const upload = (req, res, next) => {
   const BASE_PATH = path.join(__dirname, "../uploads");
 
+  
   if (!fs.existsSync(BASE_PATH)) {
     fs.mkdirSync(BASE_PATH, { recursive: true });
   }
@@ -59,6 +60,7 @@ const upload = (req, res, next) => {
         });
       }
     }
+    
 
     if (!req.files || Object.keys(req.files).length === 0) {
       return next();

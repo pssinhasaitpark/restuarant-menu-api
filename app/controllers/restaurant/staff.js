@@ -84,8 +84,6 @@ exports.addStaffMember = async (req, res) => {
     }
 }
 
-
-
 exports.getAllStaffMembers = async (req, res) => {
     try {
         const { restaurant_id } = req.user;
@@ -170,7 +168,6 @@ exports.deleteStaffMember = async (req, res) => {
         return handleResponse(res, 500, 'Error in deleting staff member details');
     }
 };
-
 
 exports.updateStaffMember = async (req, res) => {
     try {
