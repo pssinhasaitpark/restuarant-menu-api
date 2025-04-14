@@ -5,6 +5,7 @@ module.exports = {
     menu_management:require('./restaurant/menu_management'),
     support:require('./restaurant/support'),
     staff:require('./restaurant/staff'),
-    user:require('./user/user')
+    user:require('./user/user'),
+    review:require('./user/reviews.js')
 
 }

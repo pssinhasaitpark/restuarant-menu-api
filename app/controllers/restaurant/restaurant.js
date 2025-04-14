@@ -13,7 +13,13 @@ exports.addRestaurant = async (req, res) => {
         return handleResponse(res, 400, error.details[0].message);
     }
 
-    const { restaurant_name, owner_name, email, password, mobile, opening_time, closing_time, location, type } = req.body;
+    const { restaurant_name, owner_name, email, password, mobile, opening_time, closing_time, location, type } = req.body || {};
+
+
+    if (!password) {
+        return res.status(400).json({ message: "Password is required" });
+    }
+
 
 
     if (type && !['veg', 'non_veg'].includes(type)) {
@@ -229,10 +235,10 @@ exports.updateRestaurant = async (req, res) => {
             hashedPassword = await bcrypt.hash(password, 10);
         }
 
-        let imageUrls = restaurant.images || []; 
+        let imageUrls = restaurant.images || [];
 
         if (req.convertedFiles && req.convertedFiles.images && req.convertedFiles.images.length > 0) {
-            imageUrls = [...req.convertedFiles.images]; 
+            imageUrls = [...req.convertedFiles.images];
         }
 
         const logoImageUrl = (req.convertedFiles && req.convertedFiles.logo && req.convertedFiles.logo[0]) || restaurant.logo;
@@ -247,8 +253,8 @@ exports.updateRestaurant = async (req, res) => {
             closing_time: closing_time || restaurant.closing_time,
             location: location || restaurant.location,
             type: type || restaurant.type,
-            logo: logoImageUrl, 
-            images: imageUrls 
+            logo: logoImageUrl,
+            images: imageUrls
         };
 
         const updatedRestaurant = await prisma.restaurant.update({
