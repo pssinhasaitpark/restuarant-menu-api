@@ -36,7 +36,7 @@ model restaurant {
   menu_items      menu_items[]
   category        category[]
   staff           staff[]
-  rating          rating[]
+  review          review[]
 }
 
 enum restaurantType {
@@ -44,44 +44,6 @@ enum restaurantType {
   non_veg
 }
 
-// model table {
-//   id            String @id @default(uuid()) @db.Uuid
-//   table_number  String @unique
-//   capacity      Int
-//   cover_charges Int    @default(30)
-//   status        String @default("free")
-
-//   restaurant_id String
-//   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-//   bookings      booking[]
-// }
-
-// model booking {
-//   id                String  @id @default(uuid()) @db.Uuid
-//   customer_name     String
-//   contact_no        String
-//   num_of_people     Int
-//   booking_time      String
-//   date              String
-//   total_charge      Int
-//   instruction       String?
-//   status            String  @default("pending")
-//   payment_status    String  @default("pending")
-//   razorpay_order_id String  @default("null")
-//   payment_id        String  @default("null")
-
-//   token_number String?
-
-//   table_id String @db.Uuid
-//   table    table  @relation(fields: [table_id], references: [id], onDelete: Cascade)
-
-//   restaurant_id String
-//   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-//   menu_items menu_items[]
-//   createdAt  DateTime     @default(now())
-//   updatedAt  DateTime     @updatedAt
-// }
 
 model table {
   id            String @id @default(uuid()) @db.Uuid
@@ -180,9 +142,9 @@ model staff {
   updatedAt DateTime @updatedAt
 }
 
-model rating {
+model review {
   id            String     @id @default(uuid()) @db.Uuid
-  stars         Int
+  stars         Float
   comment       String?
   user_name     String
   user_id       String
@@ -195,11 +157,12 @@ model rating {
 model user {
   id         String    @id @default(uuid())
   user_name  String
-  email      String
+  email      String    @unique
   mobile_no  String    @unique
   role_type  String    @default("user")
   createdAt  DateTime  @default(now())
   otp        String?
   otp_expiry DateTime?
-  rating     rating[]
+  review     review[]
 }
+

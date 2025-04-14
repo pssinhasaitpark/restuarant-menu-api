@@ -8,7 +8,6 @@ exports.createSupport = async (req, res) => {
     try {
         const { name, email, phone_no, subject, issues } = req.body;
 
-        // Create the support request in the database
         const data = await prisma.support.create({
             data: {
                 name,
@@ -19,10 +18,9 @@ exports.createSupport = async (req, res) => {
             },
         });
 
-        // Send the thank you email to the user
-        await sendSupportConnectingMail(email); // Send email after creating the support record
+        await sendSupportConnectingMail(email); 
 
-        // Return the response to the client
+   
         return handleResponse(res, 201, "Data added successfully, and email sent.", data);
 
     } catch (error) {

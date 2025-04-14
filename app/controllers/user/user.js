@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const { handleResponse } = require('../../utils/helper');
 const prisma = new PrismaClient();
 const { jwtAuthentication } = require("../../middlewares");
+const { sendOtp } = require('../../utils/emailHandler'); 
 
 exports.registerUser = async (req, res) => {
     try {
@@ -35,33 +36,32 @@ exports.registerUser = async (req, res) => {
 }
 
 exports.loginUser = async (req, res) => {
+    
     try {
-        const { mobile_no } = req.body;
-        console.log("mobile_no===", mobile_no);
+        const { email } = req.body;
 
-
-        if (!mobile_no) return handleResponse(res, 400, "Mobile number is required");
+        if (!email) return handleResponse(res, 400, "Mobile no is required");
 
         const user = await prisma.user.findUnique({
-            where: { mobile_no }
+            where: { email }
         });
 
         if (!user) return handleResponse(res, 404, "User not found");
 
-        //   const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        const otp = "123456";
-
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        
         const expiry = new Date(Date.now() + 5 * 60 * 1000); 
 
         await prisma.user.update({
-            where: { mobile_no },
+            where: { email },
             data: {
                 otp,
                 otp_expiry: expiry
             }
         });
 
-        console.log(`OTP for ${mobile_no} is: ${otp}`);
+         await sendOtp(email,otp)
+
 
         return handleResponse(res, 200, "OTP sent successfully.......................");
     } catch (err) {
@@ -72,14 +72,14 @@ exports.loginUser = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
     try {
-        const { mobile_no, otp } = req.body;
+        const { email, otp } = req.body;
 
-        if (!mobile_no || !otp) {
-            return handleResponse(res, 400, "Mobile number and OTP are required");
+        if (!email || !otp) {
+            return handleResponse(res, 400, "Email and OTP are required");
         }
 
         const user = await prisma.user.findUnique({
-            where: { mobile_no }
+            where: { email }
         });
 
         if (!user || user.otp !== otp) {
@@ -92,7 +92,7 @@ exports.verifyOtp = async (req, res) => {
 
 
         await prisma.user.update({
-            where: { mobile_no },
+            where: { email },
             data: {
                 otp: null,
                 otp_expiry: null

@@ -102,6 +102,9 @@ exports.getTableId = async (req, res) => {
         }
         return handleResponse(res, 200, 'Table fetched successfully.', table);
     } catch (error) {
+        if(error.code==="P2023"){
+            return handleResponse(res,400,"Please provide valid table id");
+        }
         console.error(error);
         return handleResponse(res, 500, 'Internal Server Error');
     }

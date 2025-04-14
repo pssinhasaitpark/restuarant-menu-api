@@ -257,7 +257,6 @@ exports.updateBookingTime = async (req, res) => {
   }
 };
 
-
 exports.getAllBookings = async (req, res) => {
   const { role_type, restaurant_id } = req.user;
   try {

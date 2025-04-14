@@ -82,7 +82,6 @@ exports.sendSupportConnectingMail = async (userEmail) => {
 };
 
 
-
 exports.sendResetEmail = async (email, resetToken) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -110,4 +109,78 @@ exports.sendResetEmail = async (email, resetToken) => {
 };
 
 
+exports.sendOtp = async (userEmail,otp) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      port: 465,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
+    const mailOptions = {
+      from: "casoji6215@jarars.com",
+      to: userEmail,
+      subject: `Login Otp`,
+      html: `
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+              }
+              .container {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e0e0e0;
+              }
+              .header {
+                background-color: #3498db;
+                padding: 15px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                text-align: center;
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: bold;
+              }
+              p {
+                font-size: 16px;
+                line-height: 1.5;
+                color: #34495e;
+                margin-bottom: 20px;
+              }
+              .footer {
+                font-size: 12px;
+                color: #7f8c8d;
+                text-align: center;
+                margin-top: 30px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">Login Otp Mail</div>
+              <p>Hello,</p>
+              <p>Your one time password for login is ${otp}</p>
+            </div>
+          </body>
+        </html>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (err) {
+    console.error("Error sending thank you email:", err);
+  }
+};
