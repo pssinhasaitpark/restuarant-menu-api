@@ -6,6 +6,8 @@ module.exports = {
     support:require('./restaurant/support'),
     staff:require('./restaurant/staff'),
     user:require('./user/user'),
-    review:require('./user/reviews.js')
+    review:require('./user/reviews.js'),
+    order:require('./restaurant/order.js'),
+
 
 }

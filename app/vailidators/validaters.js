@@ -117,7 +117,9 @@ exports.menuItemSchema = Joi.array().items(
 
 exports.tableSchema = Joi.object({
     table_number: Joi.string().required(),
-    capacity: Joi.string().required()
+    capacity: Joi.string().required(),
+    status: Joi.string().required()
+    
 });
 
 exports.forgatePasswordSchema = Joi.object({

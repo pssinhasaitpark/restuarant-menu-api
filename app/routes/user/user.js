@@ -12,7 +12,11 @@ router.post("/login", user.loginUser);
 
 router.post('/verify-otp', user.verifyOtp);
 
- router.get("/", user.getAllUser)
+router.get("/get",verifyToken, user.getUserById);
+
+ router.get("/", user.getAllUser);
+
+
 
  router.delete("/:id",user.deleteUser)
 

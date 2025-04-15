@@ -92,43 +92,6 @@ exports.verifyToken = async (req, res, next) => {
   }
 };
 
-exports.verifyResetToken = async (req, res, next) => {
-  let encryptedToken = req.headers.authorization
-    ? req.headers.authorization.split(' ')[1]
-    : req.headers['x-auth-token'] ||
-    req.query.q ||
-    req.body.token;
-
-
-  if (!encryptedToken) {
-    return handleResponse(res, 401, "No token provided");
-  }
-
-  try {
-    const decryptedToken = exports.decryptToken(encryptedToken);
-
-    const decodedToken = JWT.verify(decryptedToken, process.env.RESET_TOKEN_SECRET);
-
-    if (!decodedToken) {
-      return handleResponse(res, 401, "Invalid or expired token");
-    }
-
-    req.user = decodedToken;
-
-    next();
-  } catch (err) {
-    return handleResponse(res, 401, "Invalid or expired token");
-  }
-};
-
-exports.verifyAdmin = (req, res, next) => {
-  const { user_role } = req.user;
-  if (user_role !== 'super_admin') {
-    return handleResponse(res, 403, "Access forbidden: Admins only");
-  }
-  next();
-};
-
 exports.verifyRole = (req, res) => {
   const { role_type, encryptedToken } = req.user;
 

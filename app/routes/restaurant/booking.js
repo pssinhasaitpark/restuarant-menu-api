@@ -5,9 +5,11 @@ const { booking } = require("../../controllers")
 const { verifyToken} = require('../../middlewares/jwtAuth');
 
 
-router.post("/", booking.bookingTable);
 
-router.post("/verifyPayment", booking.verifyBookingPayment);
+
+router.post("/:id",verifyToken, booking.bookingTable);
+
+router.put("/verifyPayment", booking.verifyBookingPayment);
 
 router.put("/:id", booking.cancelBooking);
 

@@ -4,8 +4,9 @@ const bookingRoutes=require("../routes/restaurant/booking");
 const menu_managementRoutes=require("../routes/restaurant/menu_management");
 const supportRoutes=require("../routes/restaurant/support");
 const staffRoutes=require("../routes/restaurant/staff");
-const userRoutes=require("../routes/user/user")
-const reviewRoutes=require("../routes/user/reviews")
+const userRoutes=require("../routes/user/user");
+const reviewRoutes=require("../routes/user/reviews");
+const orderRoutes=require("../routes/restaurant/order")
 
 module.exports = (app) => {
     app.use("/api/restaurant", reastaurantRoutes);
@@ -15,6 +16,8 @@ module.exports = (app) => {
     app.use("/api/support",supportRoutes);
     app.use("/api/staff",staffRoutes);
     app.use("/api/user",userRoutes);
-    app.use("/api/review",reviewRoutes)
+    app.use("/api/review",reviewRoutes);
+    app.use("/api/order",orderRoutes);
+
 
 };
