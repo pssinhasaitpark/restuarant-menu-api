@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const { handleResponse } = require('../../utils/helper');
 const prisma = new PrismaClient();
 const { jwtAuthentication } = require("../../middlewares");
-const { sendOtp } = require('../../utils/emailHandler'); 
+const { sendOtp } = require('../../utils/emailHandler');
 
 exports.registerUser = async (req, res) => {
     try {
@@ -36,7 +36,7 @@ exports.registerUser = async (req, res) => {
 }
 
 exports.loginUser = async (req, res) => {
-    
+
     try {
         const { email } = req.body;
 
@@ -49,8 +49,8 @@ exports.loginUser = async (req, res) => {
         if (!user) return handleResponse(res, 404, "User not found");
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        
-        const expiry = new Date(Date.now() + 5 * 60 * 1000); 
+
+        const expiry = new Date(Date.now() + 5 * 60 * 1000);
 
         await prisma.user.update({
             where: { email },
@@ -60,7 +60,7 @@ exports.loginUser = async (req, res) => {
             }
         });
 
-         await sendOtp(email,otp)
+        await sendOtp(email, otp)
 
 
         return handleResponse(res, 200, "OTP sent successfully.......................");
@@ -112,11 +112,62 @@ exports.verifyOtp = async (req, res) => {
     }
 };
 
+
+exports.getUserById = async (req, res) => {
+    try {
+        const user_id = req.user.sub; 
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id: user_id
+            },
+            include: {
+                booking: {
+                    include: {
+                        restaurant: {
+                            select: {
+                                restaurant_name: true,
+                                location: true,
+
+                            }
+                        },
+                        menu_items: {
+                            select: {
+                                item_name: true,
+                                item_description: true,
+                                item_price: true,
+                            }
+                        }
+                    }
+                },
+                review:true
+            }
+        });
+
+        if (!user) {
+            return handleResponse(res, 404, "User not found");
+        }
+
+        return handleResponse(res, 200, "User details fetched successfully", user);
+
+    } catch (error) {
+        console.error("Error in getUserById:", error);
+
+        if (error.code === 'P2023') {
+            return handleResponse(res, 400, "Please provide a valid user ID");
+        }
+
+        return handleResponse(res, 500, "Error in fetching user details");
+    }
+};
+
+
+
 exports.getAllUser = async (req, res) => {
     try {
         const user = await prisma.user.findMany({
             select: {
-                id:true,
+                id: true,
                 user_name: true,
                 email: true,
                 mobile_no: true
@@ -136,6 +187,7 @@ exports.getAllUser = async (req, res) => {
 
 }
 
+/*
 exports.getUserById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -159,6 +211,7 @@ exports.getUserById = async (req, res) => {
 
     }
 }
+*/
 
 exports.deleteUser = async (req, res) => {
     try {
@@ -182,7 +235,7 @@ exports.deleteUser = async (req, res) => {
         });
 
 
-        return handleResponse(res, 200, "User details deleted successfully",user);
+        return handleResponse(res, 200, "User details deleted successfully", user);
 
     } catch (error) {
 
@@ -194,3 +247,4 @@ exports.deleteUser = async (req, res) => {
         return handleResponse(res, 500, 'Error in deleting User details');
     }
 };
+

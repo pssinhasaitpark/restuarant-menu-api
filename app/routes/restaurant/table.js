@@ -8,13 +8,15 @@ const { verifyToken } = require('../../middlewares/jwtAuth');
 
 router.post("/",verifyToken,table.addTable);
 
-router.get("/availables",verifyToken,table.availableTables)
+router.get("/availables",verifyToken,table.availableTables);
 
 router.get("/:id",verifyToken,table.getTableId);
 
-router.get("/",verifyToken,table.getAllTableDetails)
+router.get("/",verifyToken,table.getAllTableDetails);
 
-router.delete("/:id",verifyToken,table.deleteTable)
+router.delete("/:id",verifyToken,table.deleteTable);
+
+router.put("/update/:id",table.updateTable)
 
 
 

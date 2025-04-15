@@ -5,10 +5,11 @@ const prisma = new PrismaClient();
 
 
 exports.addTable = async (req, res) => {
-
+    
     if (!Array.isArray(req.body.tables) || req.body.tables.length === 0) {
         return handleResponse(res, 400, 'Invalid request. No tables provided.');
     }
+    
 
     const createdTables = [];
 
@@ -18,7 +19,7 @@ exports.addTable = async (req, res) => {
             return handleResponse(res, 400, error.details[0].message);
         }
 
-        const { table_number, capacity } = table;
+        const { table_number, capacity, status } = table;
         const restaurantId = req.user.restaurant_id;
 
         const parsedCapacity = parseInt(capacity, 10);
@@ -40,18 +41,16 @@ exports.addTable = async (req, res) => {
         const cover_charge = 10;
 
         try {
-            // Create the table
             const newTable = await prisma.table.create({
                 data: {
                     table_number,
                     capacity: parsedCapacity,
                     cover_charges: cover_charge,
-                    status: 'free',
+                    status: status,
                     restaurant_id: restaurantId
                 }
             });
 
-            // Push the created table data to the createdTables array
             createdTables.push(newTable);
 
         } catch (err) {
@@ -86,7 +85,7 @@ exports.availableTables = async (req, res) => {
 };
 
 exports.getTableId = async (req, res) => {
-    
+
     const restaurantId = req.user.restaurant_id;
     try {
         const { id } = req.params;
@@ -102,8 +101,8 @@ exports.getTableId = async (req, res) => {
         }
         return handleResponse(res, 200, 'Table fetched successfully.', table);
     } catch (error) {
-        if(error.code==="P2023"){
-            return handleResponse(res,400,"Please provide valid table id");
+        if (error.code === "P2023") {
+            return handleResponse(res, 400, "Please provide valid table id");
         }
         console.error(error);
         return handleResponse(res, 500, 'Internal Server Error');
@@ -141,7 +140,7 @@ exports.deleteTable = async (req, res) => {
     try {
 
         const { role_type, restaurant_id } = req.user;
-        
+
         const { id } = req.params;
 
         const existingTable = await prisma.table.findFirst({
@@ -175,11 +174,45 @@ exports.deleteTable = async (req, res) => {
 
     } catch (err) {
         if (err.code === 'P2025') {
-            return handleResponse(res, 404, "Restaurant not found!");
+            return handleResponse(res, 404, "Table not found!");
         }
         console.error(err);
         return handleResponse(res, 500, 'Something went wrong while deleting the table');
     }
 };
 
+exports.updateTable = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { capacity, status, table_number } = req.body || {};
 
+
+        const existingTable = await prisma.table.findUnique({
+            where: {
+                id: id
+            }
+        });
+        if (!existingTable) {
+            return handleResponse(res, 404, "Table not found with provided id");
+        }
+
+        const updatedTable = await prisma.table.update({
+            where: {
+                id: id
+            },
+            data: {
+                capacity: parseInt(capacity, 10) || existingTable.capacity,
+                table_number: table_number || existingTable.table_number,
+                status: status || existingTable.status
+            }
+        })
+        return handleResponse(res, 200, "Table data updated successfully", updatedTable);
+
+    } catch (error) {
+        if (error.code === 'P2023') {
+            return handleResponse(res, 404, "Table not found!");
+        }
+        console.log(error);
+        return handleResponse(res, 500, "Error in updating table details")
+    }
+}

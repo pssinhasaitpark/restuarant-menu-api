@@ -6,10 +6,10 @@ const razorpayInstance = require('../../utils/razorpay');
 const crypto = require('crypto');
 
 
-
 exports.bookingTable = async (req, res) => {
   try {
-    const restaurant_id = req.query.id;
+    const restaurant_id = req.params.id;
+    const user_id = req.user.sub; 
 
     if (!restaurant_id) {
       return handleResponse(res, 400, "Provide a restaurant id");
@@ -68,7 +68,7 @@ exports.bookingTable = async (req, res) => {
     let tokenNumber = null;
 
     if (menu_items && menu_items.length > 0) {
-      const menuItemIds = menu_items.map((item) => item.id);
+      const menuItemIds = menu_items.filter(Boolean).map(item => item.id); 
 
       const menuItemDetails = await prisma.menu_items.findMany({
         where: {
@@ -77,7 +77,7 @@ exports.bookingTable = async (req, res) => {
         },
       });
 
-      if (menuItemDetails.length !== menu_items.length) {
+      if (menuItemDetails.length !== menuItemIds.length) {
         return handleResponse(
           res,
           400,
@@ -85,12 +85,16 @@ exports.bookingTable = async (req, res) => {
         );
       }
 
-      totalCharge += menu_items.reduce((sum, item) => {
-        const menuItemDetail = menuItemDetails.find((mi) => mi.id === item.id);
-        return sum + parseInt(menuItemDetail.item_price) * item.quantity;
-      }, 0);
-
-      selectedMenuItems = menuItemDetails;
+      menu_items.forEach(item => {
+        const menuItem = menuItemDetails.find(m => m.id === item.id);
+        if (menuItem) {
+          totalCharge += menuItem.item_price * item.quantity;
+          selectedMenuItems.push({
+            ...menuItem,
+            quantity: item.quantity,
+          });
+        }
+      });
 
       const latestBookingWithToken = await prisma.booking.findFirst({
         where: {
@@ -142,10 +146,15 @@ exports.bookingTable = async (req, res) => {
       total_charge: totalCharge,
       instruction,
       status: "pending",
-      restaurant: { connect: { id: restaurant.id } },
+      restaurant: {
+        connect: { id: restaurant.id },
+      },
       razorpay_order_id: order.id,
       tables: {
         connect: tables.map((table) => ({ id: table.id })),
+      },
+      user: {
+        connect: { id: user_id },
       },
     };
 
@@ -161,6 +170,7 @@ exports.bookingTable = async (req, res) => {
       include: {
         tables: true,
         menu_items: true,
+        user: true,
       },
     });
 
@@ -175,6 +185,7 @@ exports.bookingTable = async (req, res) => {
     return handleResponse(res, 500, "Error in booking table");
   }
 };
+
 
 exports.cancelBooking = async (req, res) => {
   try {
@@ -258,7 +269,11 @@ exports.updateBookingTime = async (req, res) => {
 };
 
 exports.getAllBookings = async (req, res) => {
-  const { role_type, restaurant_id } = req.user;
+
+
+  const role_type = req.user?.role_type;
+  const restaurant_id = req.query.id || req.user.restaurant_id;
+
   try {
     let bookings;
 
@@ -278,7 +293,7 @@ exports.getAllBookings = async (req, res) => {
               location: true,
             },
           },
-          menu_items: true, // Optional: only include if you want menu items too
+          menu_items: true,
         },
       });
     } else {
@@ -300,7 +315,7 @@ exports.getAllBookings = async (req, res) => {
               location: true,
             },
           },
-          menu_items: true, // Optional
+          menu_items: true,
         },
       });
     }

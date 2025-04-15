@@ -37,13 +37,13 @@ model restaurant {
   category        category[]
   staff           staff[]
   review          review[]
+  order           order[]
 }
 
 enum restaurantType {
   veg
   non_veg
 }
-
 
 model table {
   id            String @id @default(uuid()) @db.Uuid
@@ -56,6 +56,7 @@ model table {
   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   bookings      booking[]
 }
+
 
 model booking {
   id                String  @id @default(uuid()) @db.Uuid
@@ -75,6 +76,9 @@ model booking {
   restaurant_id String
   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
+  user_id String
+  user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   menu_items menu_items[]
   tables     table[]
   createdAt  DateTime     @default(now())
@@ -93,6 +97,7 @@ model menu_items {
   restaurant_id    String
   restaurant       restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   bookings         booking[]
+  order            order[]
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 }
@@ -164,5 +169,20 @@ model user {
   otp        String?
   otp_expiry DateTime?
   review     review[]
+  booking    booking[]
 }
 
+model order {
+  id            String   @id @default(uuid()) @db.Uuid
+  token_number  String   @unique
+  customer_name String
+  email         String
+  status        String   @default("pending")
+  total_amount  Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  menu_items    menu_items[]
+  restaurant_id String
+  restaurant    restaurant   @relation(fields: [restaurant_id], references: [id])
+}
