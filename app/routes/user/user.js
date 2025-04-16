@@ -14,11 +14,9 @@ router.post('/verify-otp', user.verifyOtp);
 
 router.get("/get",verifyToken, user.getUserById);
 
- router.get("/", user.getAllUser);
+router.get("/", user.getAllUser);
 
-
-
- router.delete("/:id",user.deleteUser)
+router.delete("/:id",user.deleteUser)
 
 
 

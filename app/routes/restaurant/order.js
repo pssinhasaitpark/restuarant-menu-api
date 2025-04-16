@@ -7,6 +7,9 @@ const { order } = require("../../controllers")
 
 router.post("/",order.placeOrder);
 
+router.get("/",order.getAllOrders);
+
+
 
 
 module.exports = router;

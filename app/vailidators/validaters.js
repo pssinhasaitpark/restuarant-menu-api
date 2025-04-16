@@ -203,3 +203,51 @@ exports.staffSchema = Joi.object({
             "string.empty": "Other details cannot be empty when provided."
         })
 });
+
+
+exports.stockSchema = Joi.object({
+    item_name: Joi.string().required().messages({
+      'string.base': 'Item name must be a string.',
+      'string.empty': 'Item name cannot be empty.',
+      'any.required': 'Item name is required.'
+    }),
+  
+    category_name: Joi.string().required().messages({
+      'string.base': 'Category name must be a string.',
+      'string.empty': 'Category name cannot be empty.',
+      'any.required': 'Category name is required.'
+    }),
+  
+    quantity: Joi.number().integer().min(0).required().messages({
+      'number.base': 'Quantity must be a number.',
+      'number.integer': 'Quantity must be an integer.',
+      'number.min': 'Quantity cannot be less than 0.',
+      'any.required': 'Quantity is required.'
+    }),
+  
+    unit: Joi.string().required().messages({
+      'string.base': 'Unit must be a string.',
+      'string.empty': 'Unit cannot be empty.',
+      'any.required': 'Unit is required.'
+    }),
+  
+    supplier_name: Joi.string().required().messages({
+      'string.base': 'Supplier name must be a string.',
+      'string.empty': 'Supplier name cannot be empty.',
+      'any.required': 'Supplier name is required.'
+    }),
+  
+    price_per_unit: Joi.number().positive().required().messages({
+      'number.base': 'Price per unit must be a number.',
+      'number.positive': 'Price per unit must be a positive number.',
+      'any.required': 'Price per unit is required.'
+    }),
+  
+    total_price: Joi.number().positive().optional().messages({
+      'number.base': 'Total price must be a number.',
+      'number.positive': 'Total price must be a positive number.',
+      'any.required': 'Total price is required.'
+    }),
+  
+  });
+  

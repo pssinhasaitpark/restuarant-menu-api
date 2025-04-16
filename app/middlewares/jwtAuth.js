@@ -85,12 +85,14 @@ exports.verifyToken = async (req, res, next) => {
     }
 
     req.user = decodedToken;
+
   
     next(); 
   } catch (err) {
     return handleResponse(res, 401, "Invalid or expired token");
   }
 };
+
 
 exports.verifyRole = (req, res) => {
   const { role_type, encryptedToken } = req.user;

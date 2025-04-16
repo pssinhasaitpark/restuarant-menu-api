@@ -9,7 +9,7 @@ const crypto = require('crypto');
 exports.bookingTable = async (req, res) => {
   try {
     const restaurant_id = req.params.id;
-    const user_id = req.user.sub; 
+    const user_id = req.user.sub;
 
     if (!restaurant_id) {
       return handleResponse(res, 400, "Provide a restaurant id");
@@ -68,7 +68,7 @@ exports.bookingTable = async (req, res) => {
     let tokenNumber = null;
 
     if (menu_items && menu_items.length > 0) {
-      const menuItemIds = menu_items.filter(Boolean).map(item => item.id); 
+      const menuItemIds = menu_items.filter(Boolean).map(item => item.id);
 
       const menuItemDetails = await prisma.menu_items.findMany({
         where: {
@@ -190,12 +190,15 @@ exports.bookingTable = async (req, res) => {
 exports.cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
+    const user_id = req.user.sub;
+
     const booking = await prisma.booking.findUnique({
       where: {
-        id: id
+        id: id,
+        user_id: user_id
       },
       include: {
-        table: true
+        tables: true
       }
     });
 
@@ -203,26 +206,34 @@ exports.cancelBooking = async (req, res) => {
       return handleResponse(res, 404, 'Booking not found.');
     }
 
-    await prisma.booking.update({
-      where: { id: id },
+    if (booking.status === 'cancelled') {
+      return handleResponse(res, 400, 'Booking is already cancelled.');
+    }
+
+    const updateTables = booking.tables.map((table) =>
+      prisma.table.update({
+        where: { id: table.id },
+        data: { status: 'free' }
+      })
+    );
+    
+    await Promise.all(updateTables);
+  
+  
+    const data = await prisma.booking.update({
+      where: { id: id, user_id: user_id },
       data: {
         status: 'cancelled',
       }
     });
 
-    await prisma.table.update({
-      where: { id: booking.table_id },
-      data: {
-        status: 'free',
-      }
-    });
-
-    return handleResponse(res, 200, 'Booking cancelled successfully.');
+    return handleResponse(res, 200, 'Booking cancelled successfully.', data);
   } catch (err) {
     console.error(err);
     return handleResponse(res, 500, 'Error in cancelling booking');
   }
 };
+
 
 exports.updateBookingTime = async (req, res) => {
   try {
@@ -390,4 +401,6 @@ exports.verifyBookingPayment = async (req, res) => {
     return handleResponse(res, 400, "Signature mismatch");
   }
 };
+
+
 

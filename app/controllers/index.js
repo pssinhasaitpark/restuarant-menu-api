@@ -8,6 +8,6 @@ module.exports = {
     user:require('./user/user'),
     review:require('./user/reviews.js'),
     order:require('./restaurant/order.js'),
-
+    stock:require('./restaurant/stock')
 
 }

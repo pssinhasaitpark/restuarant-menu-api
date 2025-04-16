@@ -120,24 +120,6 @@ exports.login = async (req, res, next) => {
     }
 };
 
-// exports.getAllRestaurent = async (req, res) => {
-//     try {
-
-//         const data = await prisma.restaurant.findMany({
-//             where: {
-//                 role_type: { not: 'super_admin' }
-//             }
-//         });
-
-//         if (!data || data.length === 0) {
-//             return handleResponse(res, 404, "No restaurant found in the database");
-//         }
-
-//         return handleResponse(res, 200, "Restaurant details fetched successfully!", data);
-//     } catch (error) {
-//         return handleResponse(res, 500, "Error fetching restaurant details", error.message);
-//     }
-// };
 
 exports.getAllRestaurent = async (req, res) => {
     try {
@@ -363,15 +345,15 @@ exports.me = async (req, res) => {
             return handleResponse(res, 401, "Unauthorized user");
         }
 
-        const user = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+        const restaurants = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
 
-        if (!user) {
-            return handleResponse(res, 404, "User not found");
+        if (!restaurants) {
+            return handleResponse(res, 404, "Restaurent not found");
         }
 
-        user.password = undefined;
+        restaurants.password = undefined;
 
-        handleResponse(res, 200, "Restaurent User details retrieved successfully!", user);
+        handleResponse(res, 200, "Restaurent  details retrieved successfully!", restaurants);
     } catch (error) {
         console.log(error)
         return handleResponse(res, 500, "Error in fetching  details", error.message);
