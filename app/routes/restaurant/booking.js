@@ -11,7 +11,7 @@ router.post("/:id",verifyToken, booking.bookingTable);
 
 router.put("/verifyPayment", booking.verifyBookingPayment);
 
-router.put("/:id", booking.cancelBooking);
+router.put("/cancel-booking/:id",verifyToken, booking.cancelBooking);
 
 router.put("/update/:id", booking.updateBookingTime);
 

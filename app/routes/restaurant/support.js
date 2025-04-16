@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 
 const { support } = require("../../controllers")
-const { verifyToken } = require('../../middlewares/jwtAuth');
 
 
 

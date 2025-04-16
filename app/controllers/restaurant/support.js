@@ -71,8 +71,8 @@ exports.deleteSupportDetails = async (req, res) => {
 
         return handleResponse(res, 200, "Support details deleted succesfully", data);
 
-    } catch (err) {
-        if (err.code === 'P2025') {
+    } catch (error) {
+        if (error.code === 'P2025') {
             return handleResponse(res, 404, `Support details not found!`);
         }
         console.log(error);

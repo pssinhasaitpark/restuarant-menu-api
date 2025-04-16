@@ -128,6 +128,7 @@ exports.getUserById = async (req, res) => {
                             select: {
                                 restaurant_name: true,
                                 location: true,
+                                images:true
 
                             }
                         },
@@ -187,31 +188,7 @@ exports.getAllUser = async (req, res) => {
 
 }
 
-/*
-exports.getUserById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await prisma.user.findUnique({
-            where: {
-                id: id
-            }
-        });
 
-        if(!user){
-            return handleResponse(res,404,"user not found...");
-        }
-        return handleResponse(res,200,"User details fetched successfully.............")
-
-    } catch (error) {
-        if (error.code === 'P2023') {
-            return handleResponse(res, 400, `Please provide a valid id`);
-        }
-        console.error(error);
-        return handleResponse(res, 500, 'Error in fetching user details');
-
-    }
-}
-*/
 
 exports.deleteUser = async (req, res) => {
     try {
@@ -247,4 +224,5 @@ exports.deleteUser = async (req, res) => {
         return handleResponse(res, 500, 'Error in deleting User details');
     }
 };
+
 
