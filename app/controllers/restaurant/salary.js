@@ -6,115 +6,115 @@ const { staffSalarySchema } = require('../../vailidators/validaters');
 
 
 exports.createStaffSalary = async (req, res) => {
+
     const { staffId } = req.params;
     const restaurant_id = req.user?.restaurant_id;
 
-       const { error } = staffSalarySchema.validate(req.body);
-        if (error) {
-            return handleResponse(res, 400, error.details[0].message);
-        }
-    
-  
+    const { error } = staffSalarySchema.validate(req.body);
+    if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+    }
+
+
     const {
-      base_salary,
-      bonus,
-      health_insurance,
-      absence_days,
-      month,
-      year,
-      payment_date
+        base_salary,
+        bonus,
+        health_insurance,
+        absence_days,
+        month,
+        year,
+        payment_date
     } = req.body;
-  
+
     if (!restaurant_id) {
-      return handleResponse(res, 400, "Provide a restaurant id");
+        return handleResponse(res, 400, "Provide a restaurant id");
     }
-  
+
     if (!base_salary || !bonus || !month || !year || absence_days == null || health_insurance == null) {
-      return handleResponse(res, 400, "All required salary fields must be provided");
+        return handleResponse(res, 400, "All required salary fields must be provided");
     }
-  
+
     try {
-      const per_day_rate = base_salary / 30;
-      const gross_salary = base_salary + bonus;
-      const total_deduction = (absence_days * per_day_rate) + health_insurance;
-      const total_pay_amount = gross_salary - total_deduction;
-  
-      const staff = await prisma.staff.findUnique({
-        where: { id: staffId }
-      });
-  
-      if (!staff) {
-        return handleResponse(res, 404, "Staff not found");
-      }
-  
-      const newSalary = await prisma.staff_salary.create({
-        data: {
-          employee_id: staff.employee_id,
-          base_salary,
-          bonus,
-          per_day_rate,
-          gross_slary: gross_salary,
-          health_insurance,
-          absence_days,
-          total_deduction,
-          total_pay_amount,
-          payment_status: "unpaid",
-          payment_date: payment_date ? new Date(payment_date) : null,
-          month,
-          year,
-          staff: {
-            connect: { id: staffId }
-          },
-          restaurant: {
-            connect: { id: restaurant_id }
-          }
+        const per_day_rate = base_salary / 30;
+        const gross_salary = base_salary + bonus;
+        const total_deduction = (absence_days * per_day_rate) + health_insurance;
+        const total_pay_amount = gross_salary - total_deduction;
+
+        const staff = await prisma.staff.findUnique({
+            where: { id: staffId }
+        });
+
+        if (!staff) {
+            return handleResponse(res, 404, "Staff not found");
         }
-      });
-  
-      return handleResponse(res, 201, "Salary record created", newSalary);
+
+        const newSalary = await prisma.staff_salary.create({
+            data: {
+                employee_id: staff.employee_id,
+                base_salary,
+                bonus,
+                per_day_rate,
+                gross_salary: gross_salary,
+                health_insurance,
+                absence_days,
+                total_deduction,
+                total_pay_amount,
+                payment_status: "paid",
+                payment_date: payment_date ? new Date(payment_date) : null,
+                month,
+                year,
+                staff: {
+                    connect: { id: staffId }
+                },
+                restaurant: {
+                    connect: { id: restaurant_id }
+                }
+            }
+        });
+
+        return handleResponse(res, 201, "Salary record created", newSalary);
     } catch (error) {
-      console.error("Salary Creation Error:", error);
-      return handleResponse(res, 500, "Internal Server Error");
+        console.error("Salary Creation Error:", error);
+        return handleResponse(res, 500, "Internal Server Error");
     }
 };
-  
+
 
 exports.getStaffSalaryById = async (req, res) => {
-    const { staffId } = req.params; 
-  
+    const { staffId } = req.params;
+
     try {
-      
-      const staff = await prisma.staff.findUnique({
-        where: { id: staffId },
-        include: {
-          staff_salary: true, 
-        },
-      });
-  
-   
-      if (!staff) {
-        return handleResponse(res, 404, "Staff not found");
-      }
-  
-     
-      if (!staff.staff_salary || staff.staff_salary.length === 0) {
-        return handleResponse(res, 404, "No salary records found for this staff");
-      }
-  
-    
-      return handleResponse(res, 200, "Staff salary details retrieved successfully", {
-        staff: {
-          id: staff.id,
-          first_name: staff.first_name,
-          last_name: staff.last_name,
-          email: staff.email,
-          designation: staff.designation,
-          department: staff.department
-        },
-        salary_details: staff.staff_salary, 
-      });
+
+        const staff = await prisma.staff.findUnique({
+            where: { id: staffId },
+            include: {
+                staff_salary: true,
+            },
+        });
+
+
+        if (!staff) {
+            return handleResponse(res, 404, "Staff not found");
+        }
+
+
+        return handleResponse(res, 200, "Staff salary details retrieved successfully", {
+            staff: {
+                id: staff.id,
+                first_name: staff.first_name,
+                last_name: staff.last_name,
+                email: staff.email,
+                designation: staff.designation,
+                department: staff.department
+            },
+            salary_details: staff.staff_salary,
+        });
     } catch (error) {
-      console.error("Error fetching staff salary details:", error);
-      return handleResponse(res, 500, "Internal Server Error");
+        console.error("Error fetching staff salary details:", error);
+        return handleResponse(res, 500, "Internal Server Error");
     }
-  };
+};
+
+exports.updateSalary = async (req, res) => {
+
+}
