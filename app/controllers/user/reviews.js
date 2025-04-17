@@ -6,8 +6,9 @@ const prisma = new PrismaClient();
 exports.addReviews = async (req, res) => {
     try {
         const { stars, comment } = req.body;
-        const { restaurant_id } = req.user;
+        const  user_id  = req.user.sub;
         const { id } = req.params;
+
 
         const parsedStars = parseFloat(stars);
 
@@ -17,12 +18,22 @@ exports.addReviews = async (req, res) => {
 
         const user = await prisma.user.findUnique({
             where: {
-                id: restaurant_id,
-            }
+                id: user_id,
+            },
         });
 
         if (!user) {
             return handleResponse(res, 404, "User not found");
+        }
+
+        const restaurant = await prisma.restaurant.findUnique({
+            where: {
+                id: id,
+            },
+        });
+
+        if (!restaurant) {
+            return handleResponse(res, 404, "Restaurant not found");
         }
 
         const review = await prisma.review.create({
@@ -30,9 +41,9 @@ exports.addReviews = async (req, res) => {
                 stars: parsedStars,
                 comment,
                 user_name: user.user_name,
-                user_id: restaurant_id,
-                restaurant_id: id
-            }
+                user_id: user_id,
+                restaurant_id: id,
+            },
         });
 
         return handleResponse(res, 201, "Review added successfully", review);

@@ -251,3 +251,45 @@ exports.stockSchema = Joi.object({
   
   });
   
+exports.staffSalarySchema = Joi.object({
+
+    base_salary: Joi.number().required()
+        .messages({
+            "number.base": "Base salary must be a number.",
+            "any.required": "Base salary is required."
+        }),
+
+    bonus: Joi.number().required()
+        .messages({
+            "number.base": "Bonus must be a number.",
+            "any.required": "Bonus is required."
+        }),
+
+    health_insurance: Joi.number().required()
+        .messages({
+            "number.base": "Health insurance must be a number.",
+            "any.required": "Health insurance is required."
+        }),
+
+    absence_days: Joi.number().required()
+        .messages({
+            "number.base": "Absence days must be a number.",
+            "any.required": "Absence days are required."
+        }),
+
+    payment_date: Joi.date().optional()
+        .messages({
+            "date.base": "Payment date must be a valid date."
+        }),
+
+    month: Joi.string().required()
+        .messages({
+            "string.empty": "Month is required."
+        }),
+
+    year: Joi.number().integer().required()
+        .messages({
+            "number.base": "Year must be a number.",
+            "any.required": "Year is required."
+        })
+});

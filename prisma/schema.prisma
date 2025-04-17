@@ -39,6 +39,7 @@ model restaurant {
   review          review[]
   order           order[]
   stock           stock[]
+  staff_salary    staff_salary[]
 }
 
 enum restaurantType {
@@ -125,8 +126,13 @@ model support {
   issues   String
 }
 
+
+
+
+
+
 model staff {
-  id              String  @id @default(uuid()) @db.Uuid
+  id              String  @id @default(uuid())
   employee_id     String
   first_name      String
   last_name       String
@@ -144,9 +150,46 @@ model staff {
   restaurant_id String?
   restaurant    restaurant? @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  staff_salary staff_salary[]
+}
+
+
+
+model staff_salary {
+  id               String    @id @default(uuid())
+  staff_id         String
+  staff            staff     @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+  employee_id      String
+  base_salary      Float
+  bonus            Float
+  per_day_rate     Float
+  gross_slary      Float
+  health_insurance Float
+  absence_days     Float
+  total_deduction  Float
+  total_pay_amount Float
+  payment_status   String    @default("unpaid")
+  payment_date     DateTime?
+  month            String 
+  year             Int 
+
+  
+  restaurant_id    String
+  restaurant       restaurant @relation(fields: [restaurant_id], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+
+
+
+
+
+
+
 
 model review {
   id            String     @id @default(uuid()) @db.Uuid
@@ -173,20 +216,7 @@ model user {
   booking    booking[]
 }
 
-// model order {
-//   id            String   @id @default(uuid()) @db.Uuid
-//   token_number  String   @unique
-//   customer_name String
-//   email         String
-//   status        String   @default("pending")
-//   total_amount  Float    @default(0)
-//   createdAt     DateTime @default(now())
-//   updatedAt     DateTime @updatedAt
 
-//   menu_items    menu_items[]
-//   restaurant_id String
-//   restaurant    restaurant   @relation(fields: [restaurant_id], references: [id])
-// }
 
 model order_menu_items {
   id           String     @id @default(uuid()) @db.Uuid
@@ -213,22 +243,23 @@ model order {
   restaurant       restaurant         @relation(fields: [restaurant_id], references: [id])
 }
 
-
 model stock {
-  id               String   @id @default(uuid())
-  item_name        String  
-  category_name    String   
-  quantity         Int     
-  unit             String   
-  supplier_name    String   
-  price_per_unit   Float    
-  total_price      Float    @default(0)
+  id             String @id @default(uuid())
+  item_name      String
+  category_name  String
+  quantity       Int
+  unit           String
+  supplier_name  String
+  price_per_unit Float
+  total_price    Float  @default(0)
 
-  restaurant_id    String  
-  restaurant       restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  restaurant_id String
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([restaurant_id]) 
+  @@index([restaurant_id])
 }
+
+
