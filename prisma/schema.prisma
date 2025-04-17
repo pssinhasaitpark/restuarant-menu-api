@@ -40,6 +40,7 @@ model restaurant {
   order           order[]
   stock           stock[]
   staff_salary    staff_salary[]
+  support         support[]
 }
 
 enum restaurantType {
@@ -117,19 +118,27 @@ model category {
   @@unique([category_name, restaurant_id])
 }
 
+/**
+ * model support {
+ * id            String @id @default(uuid()) @db.Uuid
+ * name          String
+ * email         String
+ * phone_no      String
+ * subject       String
+ * issues        String
+ * }
+ */
+
 model support {
-  id       String @id @default(uuid()) @db.Uuid
-  name     String
-  email    String
-  phone_no String
-  subject  String
-  issues   String
+  id            String     @id @default(uuid()) @db.Uuid
+  name          String
+  email         String
+  phone_no      String
+  subject       String
+  issues        String
+  restaurant_id String 
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id]) 
 }
-
-
-
-
-
 
 model staff {
   id              String  @id @default(uuid())
@@ -155,8 +164,6 @@ model staff {
   staff_salary staff_salary[]
 }
 
-
-
 model staff_salary {
   id               String    @id @default(uuid())
   staff_id         String
@@ -165,31 +172,22 @@ model staff_salary {
   base_salary      Float
   bonus            Float
   per_day_rate     Float
-  gross_slary      Float
+  gross_salary     Float
   health_insurance Float
   absence_days     Float
   total_deduction  Float
   total_pay_amount Float
   payment_status   String    @default("unpaid")
   payment_date     DateTime?
-  month            String 
-  year             Int 
+  month            String
+  year             Int
 
-  
-  restaurant_id    String
-  restaurant       restaurant @relation(fields: [restaurant_id], references: [id])
+  restaurant_id String
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
-
-
-
-
-
-
-
 
 model review {
   id            String     @id @default(uuid()) @db.Uuid
@@ -215,8 +213,6 @@ model user {
   review     review[]
   booking    booking[]
 }
-
-
 
 model order_menu_items {
   id           String     @id @default(uuid()) @db.Uuid
@@ -261,5 +257,3 @@ model stock {
 
   @@index([restaurant_id])
 }
-
-

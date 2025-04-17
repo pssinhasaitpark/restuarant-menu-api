@@ -136,7 +136,7 @@ exports.getUserById = async (req, res) => {
                             select: {
                                 item_name: true,
                                 item_description: true,
-                                item_price: true,
+                                item_price: true
                             }
                         }
                     }

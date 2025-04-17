@@ -11,7 +11,8 @@ app.use(
     origin: [
       "http://192.168.0.130:5173",
       "http://192.168.0.133:5173",
-      "http://localhost:5173"
+      "http://localhost:5173", 
+      "restrorent.netlify.app"
     ],
     methods: ["GET", "POST", "HEAD", "PUT", "PATCH", "DELETE"],
     optionsSuccessStatus: 200,

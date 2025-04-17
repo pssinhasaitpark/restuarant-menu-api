@@ -4,9 +4,14 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { sendSupportConnectingMail } = require('../../utils/emailHandler'); 
 
+
+
+
 exports.createSupport = async (req, res) => {
     try {
         const { name, email, phone_no, subject, issues } = req.body;
+        const { restaurantId } = req.params; 
+   
 
         const data = await prisma.support.create({
             data: {
@@ -15,12 +20,12 @@ exports.createSupport = async (req, res) => {
                 phone_no,
                 subject,
                 issues,
+                restaurant_id:restaurantId,  
             },
         });
 
         await sendSupportConnectingMail(email); 
 
-   
         return handleResponse(res, 201, "Data added successfully, and email sent.", data);
 
     } catch (error) {
@@ -28,6 +33,7 @@ exports.createSupport = async (req, res) => {
         return handleResponse(res, 500, "Error in contact and support", { error: error.message });
     }
 };
+
 
 exports.getSupportDetailsById = async (req, res) => {
     try {

@@ -5,7 +5,7 @@ const { support } = require("../../controllers")
 
 
 
-router.post("/", support.createSupport);
+router.post("/:restaurantId", support.createSupport);
 
 router.get("/:id", support.getSupportDetailsById);
 
