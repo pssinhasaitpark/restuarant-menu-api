@@ -186,7 +186,8 @@ exports.getAllOrders = async (req, res) => {
         name: order.restaurant?.restaurant_name,
         email:order.restaurant?.email,
         location:order.restaurant?.location,
-        mobile:order.restaurant?.mobile
+        mobile:order.restaurant?.mobile,
+        logo:order.restaurant?.logo
 
       },
       items: order.order_menu_items.map(omi => ({
