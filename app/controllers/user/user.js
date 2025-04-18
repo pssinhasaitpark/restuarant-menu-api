@@ -48,7 +48,8 @@ exports.loginUser = async (req, res) => {
 
         if (!user) return handleResponse(res, 404, "User not found");
 
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        // const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        const otp="1234"
 
         const expiry = new Date(Date.now() + 5 * 60 * 1000);
 

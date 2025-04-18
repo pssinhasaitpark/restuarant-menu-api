@@ -15,6 +15,16 @@ exports.addRestaurant = async (req, res) => {
 
     const { restaurant_name, owner_name, email, password, mobile, opening_time, closing_time, location, type } = req.body || {};
 
+    const existingRestaurant=await prisma.restaurant.findUnique({
+        where:{
+            email:email
+        }
+    });
+    
+
+    if(existingRestaurant){
+        return handleResponse(res,400,"Reastaurant is already registered");
+    }
 
     if (!password) {
         return res.status(400).json({ message: "Password is required" });
@@ -62,8 +72,19 @@ exports.addRestaurant = async (req, res) => {
 
 exports.superAdminRegister = async (req, res) => {
     const { email, password, mobile } = req.body;
+
+    const existingUser=await prisma.restaurant.findUnique({
+        where:{
+            email:email
+        }
+    });
+
+    if(existingUser){
+        return handleResponse(res,400,"Super is already registered");
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
 
+ 
 
     try {
         const newRestaurant = await prisma.restaurant.create({
@@ -190,8 +211,6 @@ exports.getAllRestaurent = async (req, res) => {
         return handleResponse(res, 500, "Error fetching restaurant details", error.message);
     }
 };
-
-
 
 
 exports.updateRestaurant = async (req, res) => {
