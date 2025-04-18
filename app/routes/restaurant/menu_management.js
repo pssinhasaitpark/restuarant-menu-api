@@ -16,7 +16,7 @@ router.post("/", upload,verifyToken, menu_management.addMenuItems);
 
 router.delete("/category/:categoryId",verifyToken,menu_management.deleteCategory);
 
-router.delete("/menu_item/:menuItemId",verifyToken,menu_management.deleteMenuItems);
+router.delete("/menuItem/:menuItemId",verifyToken,menu_management.deleteMenuItems);
 
 router.put("/category/:categoryId",verifyToken,menu_management.updateCategory);
 

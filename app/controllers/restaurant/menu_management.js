@@ -9,186 +9,18 @@ const { PDFDocument, rgb } = require('pdf-lib');
 const sharp = require('sharp');
 const axios = require('axios');
 
-/*
-exports.addMenuItems = async (req, res) => {
-    const { category_name, items } = req.body;
-    const restaurantId = req.user.restaurant_id;
-    let imageUrls = [];
-
-    if (req.convertedFiles && req.convertedFiles.images) {
-        imageUrls = [...imageUrls, ...req.convertedFiles.images];
-    }
-
-    try {
-        let category = await prisma.category.findFirst({
-            where: {
-                category_name: category_name,
-                restaurant_id: restaurantId
-            }
-        });
-
-        if (!category) {
-            category = await prisma.category.create({
-                data: {
-                    category_name: category_name,
-                    restaurant_id: restaurantId
-                }
-            });
-        }
-
-        let createdMenuItems = [];
-        let imageIndex = 0;
-
-        for (const menuItem of items) {
-            const { item_name, item_description, item_price, images } = menuItem;
-
-            const existingItem = await prisma.menu_items.findFirst({
-                where: {
-                    item_name: item_name,
-                    restaurant_id: restaurantId,
-                    category_id: category.id
-                }
-            });
-
-            if (existingItem) {
-                return handleResponse(res, 400, `Item with the name "${item_name}" already exists in this category.`);
-            }
-
-            let itemImages = images && images.length > 0 ? images : [];
-
-            while (itemImages.length < 1 && imageIndex < imageUrls.length) {
-                itemImages.push(imageUrls[imageIndex]);
-                imageIndex++;
-            }
-
-            const newMenuItem = await prisma.menu_items.create({
-                data: {
-                    item_name,
-                    item_description,
-                    item_price,
-                    images: itemImages || [],
-                    category_id: category.id,
-                    restaurant_id: restaurantId
-                }
-            });
-
-            createdMenuItems.push(newMenuItem);
-        }
-
-        let restaurant = await prisma.restaurant.findUnique({
-            where: { id: restaurantId },
-            select: { id: true, restaurant_name: true, qr_code_url: true, logo: true }
-        });
-
-        let qrCodeUrl = restaurant.qr_code_url;
-
-        if (!qrCodeUrl) {
-            const menuUrl = `https://www.swiggy.com/city/indore/fine-dining-restaurants-dineout`;
-
-            try {
-                const qrBuffer = await QRCode.toBuffer(menuUrl, {
-                    errorCorrectionLevel: 'H',
-                    margin: 1,
-                    width: 500,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                });
-
-                if (restaurant.logo) {
-                    const response = await axios({
-                        method: 'get',
-                        url: restaurant.logo,
-                        responseType: 'arraybuffer'
-                    });
-
-                    // Resize the logo to fit within the QR code
-                    const logoBuffer = await sharp(response.data)
-                        .resize({ width: 100, height: 100 }) // Resize logo to fit in QR code
-                        .toBuffer();
-
-                    // Combine the logo with the QR code
-                    const qrImage = await sharp(qrBuffer);
-                    const logoSize = 100;
-                    const qrMetadata = await qrImage.metadata();
-                    const logoPositionX = Math.floor((qrMetadata.width - logoSize) / 2);
-                    const logoPositionY = Math.floor((qrMetadata.height - logoSize) / 2);
-
-                    const finalQrBuffer = await qrImage
-                        .composite([
-                            {
-                                input: logoBuffer,
-                                top: logoPositionY,
-                                left: logoPositionX
-                            }
-                        ])
-                        .toBuffer();
-
-                    // Create PDF with QR code and restaurant name
-                    const pdfDoc = await PDFDocument.create();
-                    const page = pdfDoc.addPage([500, 500]);
-                    const { width, height } = page.getSize();
-
-                    const font = await pdfDoc.embedStandardFont('Helvetica');
-                    const text = restaurant.restaurant_name;
-                    const textSize = 50;
-                    const textWidth = font.widthOfTextAtSize(text, textSize);
-                    const textX = width / 2 - textWidth / 2;
-                    const textY = height / 2 + 200;
-
-                    page.drawText(text, {
-                        x: textX,
-                        y: textY,
-                        font,
-                        size: textSize,
-                        color: rgb(0, 0, 0),
-                        maxWidth: width - 20
-                    });
-
-                    const qrImageObj = await pdfDoc.embedPng(finalQrBuffer);
-                    const qrDims = qrImageObj.scale(1.0);
-
-                    const qrX = width / 2 - qrDims.width / 2;
-                    const qrY = height / 2 - qrDims.height / 2;
-
-                    page.drawImage(qrImageObj, {
-                        x: qrX,
-                        y: qrY,
-                        width: qrDims.width,
-                        height: qrDims.height
-                    });
-
-                    const pdfBytes = await pdfDoc.save();
-                    const pdfFileName = `menu_${restaurant.restaurant_name}_qr_code.pdf`;
-                    const pdfFilePath = path.join(__dirname, 'uploads', 'pdf', pdfFileName);
-                    fs.writeFileSync(pdfFilePath, pdfBytes);
-
-                    qrCodeUrl = `${process.env.IMAGEURL}pdf/${pdfFileName}`;
-
-                    await prisma.restaurant.update({
-                        where: { id: restaurantId },
-                        data: { qr_code_url: qrCodeUrl }
-                    });
-
-                }
-            } catch (err) {
-                console.error("Error creating QR code with logo:", err);
-            }
-        }
-
-        return handleResponse(res, 201, 'Menu Items created successfully', createdMenuItems);
-    } catch (err) {
-        console.error(err);
-        return handleResponse(res, 500, 'Error in creating Menu Items');
-    }
-};
-*/
-
 exports.addMenuItems = async (req, res) => {
     const { category_name, items } = req.body;
 
     const restaurantId = req.user.restaurant_id;
+    let restaurant = await prisma.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { id: true, restaurant_name: true, qr_code_url: true, logo: true }
+    });
+    
+    if(!restaurant){
+        return handleResponse(res,404,"Restaurent is not exist");
+    }
 
     let imageUrls = [];
 
@@ -252,17 +84,12 @@ exports.addMenuItems = async (req, res) => {
             createdMenuItems.push(newMenuItem);
         }
 
-        let restaurant = await prisma.restaurant.findUnique({
-            where: { id: restaurantId },
-            select: { id: true, restaurant_name: true, qr_code_url: true, logo: true }
-        });
-
+      
         
         let qrCodeUrl = restaurant.qr_code_url;
 
         if (!qrCodeUrl) {
-            const menuUrl = `https://www.swiggy.com/city/indore/fine-dining-restaurants-dineout`;
-
+            const menuUrl = `${process.env.MENUURL}${restaurantId}`;
             try {
                 const BASE_PATH = path.join(__dirname, "../../uploads");
                 const PDF_PATH = path.join(BASE_PATH, 'qr_pdfs');
@@ -343,7 +170,6 @@ exports.addMenuItems = async (req, res) => {
                         try {
                       
                             const pdfDoc = await PDFDocument.create();
-                            // const page = pdfDoc.addPage();
                             const page = pdfDoc.addPage([500, 500]);  
 
                             const { width, height } = page.getSize();
@@ -421,215 +247,9 @@ exports.addMenuItems = async (req, res) => {
         return handleResponse(res, 500, 'Error in creating Menu Items');
     }
 };
-/*
-
-exports.addMenuItems = async (req, res) => {
-    const { category_name, items } = req.body;
-
-    const restaurantId = req.user.restaurant_id;
-
-    let imageUrls = [];
-
-    if (req.convertedFiles && req.convertedFiles.images) {
-        imageUrls = [...imageUrls, ...req.convertedFiles.images];
-    }
-
-    try {
-        let category = await prisma.category.findFirst({
-            where: {
-                category_name: category_name,
-                restaurant_id: restaurantId
-            }
-        });
-
-        if (!category) {
-            category = await prisma.category.create({
-                data: {
-                    category_name: category_name,
-                    restaurant_id: restaurantId
-                }
-            });
-        }
-
-        let createdMenuItems = [];
-        let imageIndex = 0;
-
-        for (const menuItem of items) {
-            const { item_name, item_description, item_price, images } = menuItem;
-
-            const existingItem = await prisma.menu_items.findFirst({
-                where: {
-                    item_name: item_name,
-                    restaurant_id: restaurantId,
-                    category_id: category.id
-                }
-            });
-
-            if (existingItem) {
-                return handleResponse(res, 400, `Item with the name "${item_name}" already exists in this category.`);
-            }
-
-            let itemImages = images && images.length > 0 ? images : [];
-
-            while (itemImages.length < 1 && imageIndex < imageUrls.length) {
-                itemImages.push(imageUrls[imageIndex]);
-                imageIndex++;
-            }
-
-            const newMenuItem = await prisma.menu_items.create({
-                data: {
-                    item_name,
-                    item_description,
-                    item_price,
-                    images: itemImages || [],
-                    category_id: category.id,
-                    restaurant_id: restaurantId
-                }
-            });
-
-            createdMenuItems.push(newMenuItem);
-        }
-
-        let restaurant = await prisma.restaurant.findUnique({
-            where: { id: restaurantId },
-            select: { id: true, restaurant_name: true, qr_code_url: true, logo: true }
-        });
-
-        console.log("restaurant============",restaurant);
-        
-        let qrCodeUrl = restaurant.qr_code_url;
-
-        if (!qrCodeUrl) {
-            const menuUrl = `https://www.swiggy.com/city/indore/fine-dining-restaurants-dineout`;
-
-            try {
-
-                const BASE_PATH = path.join(__dirname, "../../uploads");
-
-                const PDF_PATH = path.join(BASE_PATH, 'qr_pdfs');
-
-                if (!fs.existsSync(BASE_PATH)) {
-                    fs.mkdirSync(BASE_PATH, { recursive: true });
-                }
-
-                if (!fs.existsSync(PDF_PATH)) {
-                    fs.mkdirSync(PDF_PATH, { recursive: true });
-                }
-
-                const qrTempPath = path.join(__dirname, `qr_temp_${restaurant.id}.png`);
-                await QRCode.toFile(qrTempPath, menuUrl, {
-                    errorCorrectionLevel: 'H',
-                    margin: 1,
-                    width: 300,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                });
-
-                if (restaurant.logo) {
-                    const response = await axios({
-                        method: 'get',
-                        url: restaurant.logo,
-                        responseType: 'arraybuffer'
-                    });
-
-                    const logoTempPath = path.join(__dirname, `logo_${restaurant.id}.png`);
-                    await sharp(response.data)
-                        .toFormat('png')
-                        .toFile(logoTempPath);
-
-                    const qrImageMetadata = await sharp(qrTempPath).metadata();
-                    const qrWidth = qrImageMetadata.width;
-                    const qrHeight = qrImageMetadata.height;
-
-                    const logoSize = Math.round(qrWidth * 0.3);
-                    const logoX = Math.round((qrWidth - logoSize) / 2);
-                    const logoY = Math.round((qrHeight - logoSize) / 2);
-
-                    const resizedLogoPath = path.join(__dirname, `logo_resized_${restaurant.id}.png`);
-                    await sharp(logoTempPath)
-                        .resize(logoSize, logoSize)
-                        .toFile(resizedLogoPath);
-
-                    const whiteSquarePath = path.join(__dirname, `white_square_${restaurant.id}.png`);
-                    await sharp({
-                        create: {
-                            width: logoSize,
-                            height: logoSize,
-                            channels: 4,
-                            background: { r: 255, g: 255, b: 255, alpha: 1 }
-                        }
-                    })
-                        .png()
-                        .toFile(whiteSquarePath);
-
-                    const finalQrPath = path.join(__dirname, `final_qr_${restaurant.id}.png`);
-                    await sharp(qrTempPath)
-                        .composite([
-                            {
-                                input: whiteSquarePath,
-                                top: logoY,
-                                left: logoX
-                            },
-                            {
-                                input: resizedLogoPath,
-                                top: logoY,
-                                left: logoX
-                            }
-                        ])
-                        .toFile(finalQrPath);
 
 
-                    const pdfDoc = await PDFDocument.create();
-                    const page = pdfDoc.addPage();
-                    const { width, height } = page.getSize();
 
-                    const finalQrBuffer = fs.readFileSync(finalQrPath);
-                    const finalQrImage = await pdfDoc.embedPng(finalQrBuffer);
-                    const qrDims = finalQrImage.scale(1.0);
-
-                    page.drawImage(finalQrImage, {
-                        x: width / 2 - qrDims.width / 2,
-                        y: height / 2 - qrDims.height / 2,
-                        width: qrDims.width,
-                        height: qrDims.height
-                    });
-
-                    const pdfBytes = await pdfDoc.save();
-
-
-                    const pdfFileName = `menu_${restaurant.restaurant_name}_qr_code.pdf`;
-                    const pdfFilePath = path.join(PDF_PATH, pdfFileName);
-                    fs.writeFileSync(pdfFilePath, pdfBytes);
-
-
-                    qrCodeUrl = `${process.env.IMAGEURL}pdf/${pdfFileName}`;
-
-                    await prisma.restaurant.update({
-                        where: { id: restaurantId },
-                        data: { qr_code_url: qrCodeUrl }
-                    });
-
-                    fs.unlinkSync(qrTempPath);
-                    fs.unlinkSync(logoTempPath);
-                    fs.unlinkSync(resizedLogoPath);
-                    fs.unlinkSync(whiteSquarePath);
-                    fs.unlinkSync(finalQrPath);
-
-                }
-            } catch (err) {
-                console.error("Error creating QR code with logo:", err);
-            }
-        }
-        return handleResponse(res, 201, 'Menu Items created successfully', createdMenuItems);
-    } catch (err) {
-        console.error(err);
-        return handleResponse(res, 500, 'Error in creating Menu Items');
-    }
-};
-
-*/
 exports.getAllCategories = async (req, res) => {
     const restaurantId = req.query.id || req.user.restaurant_id;
 

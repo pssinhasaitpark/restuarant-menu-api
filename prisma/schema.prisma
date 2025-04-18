@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -31,37 +25,31 @@ model restaurant {
   updatedAt       DateTime       @updatedAt
   qr_code_url     String?
   wishlist        Boolean        @default(false)
-  tables          table[]
   bookings        booking[]
-  menu_items      menu_items[]
   category        category[]
-  staff           staff[]
-  review          review[]
+  menu_items      menu_items[]
   order           order[]
-  stock           stock[]
+  review          review[]
+  staff           staff[]
   staff_salary    staff_salary[]
+  stock           stock[]
   support         support[]
-}
-
-enum restaurantType {
-  veg
-  non_veg
+  tables          table[]
 }
 
 model table {
-  id            String @id @default(uuid()) @db.Uuid
-  table_number  String @unique
+  id            String     @id @default(uuid()) @db.Uuid
+  table_number  String     @unique
   capacity      Int
-  cover_charges Int    @default(30)
-  status        String @default("free")
-
+  cover_charges Int        @default(30)
+  status        String     @default("free")
   restaurant_id String
   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-  bookings      booking[]
+  bookings      booking[]  @relation("bookingTotable")
 }
 
 model booking {
-  id                String  @id @default(uuid()) @db.Uuid
+  id                String       @id @default(uuid()) @db.Uuid
   customer_name     String
   contact_no        String
   num_of_people     Int
@@ -69,23 +57,20 @@ model booking {
   date              String
   total_charge      Int
   instruction       String?
-  status            String  @default("pending")
-  payment_status    String  @default("pending")
-  razorpay_order_id String  @unique @default("null")
-  payment_id        String  @default("null")
+  status            String       @default("pending")
+  payment_status    String       @default("pending")
+  razorpay_order_id String       @unique @default("null")
+  payment_id        String       @default("null")
   token_number      String?
-  is_visited        String  @default("false")
-
-  restaurant_id String
-  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-  user_id String
-  user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  menu_items menu_items[]
-  tables     table[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  is_visited        String       @default("false")
+  restaurant_id     String
+  user_id           String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  restaurant        restaurant   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  user              user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  menu_items        menu_items[] @relation("bookingTomenu_items")
+  tables            table[]      @relation("bookingTotable")
 }
 
 model menu_items {
@@ -96,56 +81,70 @@ model menu_items {
   images           String[]
   category_id      String             @db.Uuid
   type             String             @default("veg")
-  category         category           @relation(fields: [category_id], references: [id], onDelete: Cascade)
   restaurant_id    String
-  restaurant       restaurant         @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-  bookings         booking[]
-  order_menu_items order_menu_items[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+  category         category           @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  restaurant       restaurant         @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  order_menu_items order_menu_items[]
+  bookings         booking[]          @relation("bookingTomenu_items")
 }
 
 model category {
   id            String       @id @default(uuid()) @db.Uuid
   category_name String
   restaurant_id String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   restaurant    restaurant   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   menu_items    menu_items[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@unique([category_name, restaurant_id])
 }
 
-/**
- * model support {
- * id            String @id @default(uuid()) @db.Uuid
- * name          String
- * email         String
- * phone_no      String
- * subject       String
- * issues        String
- * }
- */
+// model support {
+//   id String @id @default(uuid()) @db.Uuid
+//   issues        String
+//   restaurant_id String
+//   user_id       String
+//   user          user       @relation(fields: [user_id], references: [id])
+//   restaurant    restaurant @relation(fields: [restaurant_id], references: [id])
+// }
+
 
 model support {
-  id            String     @id @default(uuid()) @db.Uuid
-  name          String
-  email         String
-  phone_no      String
-  subject       String
-  issues        String
-  restaurant_id String 
-  restaurant    restaurant @relation(fields: [restaurant_id], references: [id]) 
+  id             String            @id @default(uuid()) @db.Uuid
+  issues         String
+  restaurant_id  String
+  user_id        String
+  user           user              @relation(fields: [user_id], references: [id])
+  restaurant     restaurant        @relation(fields: [restaurant_id], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  messages       support_message[] 
+}
+
+model support_message {
+  id          String   @id @default(uuid()) @db.Uuid
+  message     String
+  sender      SupportSenderType
+  support_id  String
+  createdAt   DateTime @default(now())
+
+  support     support  @relation(fields: [support_id], references: [id], onDelete: Cascade)
+}
+
+enum SupportSenderType {
+  user
+  restaurant_admin
 }
 
 model staff {
-  id              String  @id @default(uuid())
+  id              String         @id @default(uuid())
   employee_id     String
   first_name      String
   last_name       String
-  email           String  @unique
+  email           String         @unique
   gender          String?
   mobile_no       String
   address         String?
@@ -155,38 +154,34 @@ model staff {
   joining_date    String
   other_details   String?
   profile_image   String?
-
-  restaurant_id String?
-  restaurant    restaurant? @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  staff_salary staff_salary[]
+  restaurant_id   String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  restaurant      restaurant?    @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  staff_salary    staff_salary[]
 }
 
 model staff_salary {
-  id               String    @id @default(uuid())
+  id               String     @id @default(uuid())
   staff_id         String
-  staff            staff     @relation(fields: [staff_id], references: [id], onDelete: Cascade)
   employee_id      String
   base_salary      Float
   bonus            Float
   per_day_rate     Float
-  gross_salary     Float
   health_insurance Float
   absence_days     Float
   total_deduction  Float
   total_pay_amount Float
-  payment_status   String    @default("unpaid")
+  payment_status   String     @default("unpaid")
   payment_date     DateTime?
   month            String
   year             Int
-
-  restaurant_id String
-  restaurant    restaurant @relation(fields: [restaurant_id], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  restaurant_id    String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  gross_salary     Float
+  restaurant       restaurant @relation(fields: [restaurant_id], references: [id])
+  staff            staff      @relation(fields: [staff_id], references: [id], onDelete: Cascade)
 }
 
 model review {
@@ -195,65 +190,71 @@ model review {
   comment       String?
   user_name     String
   user_id       String
-  user          user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   restaurant_id String
-  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   createdAt     DateTime   @default(now())
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  user          user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model user {
-  id         String    @id @default(uuid())
-  user_name  String
-  email      String    @unique
-  mobile_no  String    @unique
-  role_type  String    @default("user")
-  createdAt  DateTime  @default(now())
-  otp        String?
-  otp_expiry DateTime?
-  review     review[]
-  booking    booking[]
+  id               String             @id @default(uuid())
+  user_name        String
+  email            String             @unique
+  mobile_no        String             @unique
+  role_type        String             @default("user")
+  createdAt        DateTime           @default(now())
+  otp              String?
+  otp_expiry       DateTime?
+  booking          booking[]
+  order_menu_items order_menu_items[]
+  review           review[]
+  support          support[]
 }
 
 model order_menu_items {
   id           String     @id @default(uuid()) @db.Uuid
-  order_id     String     @db.Uuid
+  order_id     String?    @db.Uuid
   menu_item_id String     @db.Uuid
   quantity     Int
-  order        order      @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user_id      String?
   menu_item    menu_items @relation(fields: [menu_item_id], references: [id], onDelete: Cascade)
+  order        order?     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user         user?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model order {
-  id            String   @id @default(uuid()) @db.Uuid
-  token_number  String   @unique
-  customer_name String
-  email         String
-  order_id      String
-  status        String   @default("pending")
-  total_amount  Float    @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  order_menu_items order_menu_items[]
+  id               String             @id @default(uuid()) @db.Uuid
+  token_number     String             @unique
+  customer_name    String
+  email            String
+  order_id         String
+  status           String             @default("pending")
+  total_amount     Float              @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   restaurant_id    String
   restaurant       restaurant         @relation(fields: [restaurant_id], references: [id])
+  order_menu_items order_menu_items[]
 }
 
 model stock {
-  id             String @id @default(uuid())
+  id             String     @id @default(uuid())
   item_name      String
   category_name  String
   quantity       Int
   unit           String
   supplier_name  String
   price_per_unit Float
-  total_price    Float  @default(0)
-
-  restaurant_id String
-  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  total_price    Float      @default(0)
+  restaurant_id  String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  restaurant     restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
 
   @@index([restaurant_id])
+}
+
+enum restaurantType {
+  veg
+  non_veg
 }

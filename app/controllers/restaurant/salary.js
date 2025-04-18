@@ -115,6 +115,3 @@ exports.getStaffSalaryById = async (req, res) => {
     }
 };
 
-exports.updateSalary = async (req, res) => {
-
-}

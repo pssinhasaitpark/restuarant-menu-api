@@ -5,9 +5,17 @@ const prisma = new PrismaClient();
 
 exports.placeOrder = async (req, res) => {
   try {
+
     const { customer_name, email, menu_items, token_number } = req.body;
     const restaurant_id = req.query.id;
 
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurant_id }
+    })
+    if (!restaurant) {
+      return handleResponse(res,404,"Restaurent is not exit")
+
+    }
     if (!menu_items || !Array.isArray(menu_items) || menu_items.length === 0) {
       return handleResponse(res, 400, "Menu items are required");
     }
@@ -122,7 +130,6 @@ exports.placeOrder = async (req, res) => {
 
         } catch (error) {
           if (error.code === 'P2002' && error.meta?.target?.includes('token_number')) {
-            // retry on unique token_number conflict
             continue;
           } else {
             throw error;
@@ -153,8 +160,6 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-
-
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -184,10 +189,10 @@ exports.getAllOrders = async (req, res) => {
       restaurant: {
         id: order.restaurant?.id,
         name: order.restaurant?.restaurant_name,
-        email:order.restaurant?.email,
-        location:order.restaurant?.location,
-        mobile:order.restaurant?.mobile,
-        logo:order.restaurant?.logo
+        email: order.restaurant?.email,
+        location: order.restaurant?.location,
+        mobile: order.restaurant?.mobile,
+        logo: order.restaurant?.logo
 
       },
       items: order.order_menu_items.map(omi => ({
