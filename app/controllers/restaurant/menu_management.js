@@ -251,6 +251,7 @@ exports.addMenuItems = async (req, res) => {
 
 
 exports.getAllCategories = async (req, res) => {
+    
     const restaurantId = req.query.id || req.user.restaurant_id;
 
     try {

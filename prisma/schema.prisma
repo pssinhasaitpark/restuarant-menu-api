@@ -258,3 +258,18 @@ enum restaurantType {
   veg
   non_veg
 }
+
+model social_media {
+  id        String   @id @default(uuid())
+  whatsapp  String?
+  facebook  String?
+  instagram String?
+  youtube   String?
+  linkedIn  String?
+  snapchat  String?
+  thread    String?
+  pinterest String?
+  x         String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

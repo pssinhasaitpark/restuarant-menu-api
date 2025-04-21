@@ -8,6 +8,8 @@ const { verifyToken } = require('../../middlewares/jwtAuth');
 
 router.post("/:id", verifyToken, review.addReviews);
 
+router.get("/:id", verifyToken, review.getReviewDetailById)
+
 router.get("/", verifyToken, review.getReviewsDetails)
 
 router.delete("/:id", review.deleteReviewDetail);

@@ -9,7 +9,6 @@ exports.addReviews = async (req, res) => {
         const  user_id  = req.user.sub;
         const { id } = req.params;
 
-
         const parsedStars = parseFloat(stars);
 
         if (isNaN(parsedStars) || parsedStars < 0 || parsedStars > 5) {
@@ -122,6 +121,8 @@ exports.deleteReviewDetail = async (req, res) => {
 
 exports.updateReviewDetials = async (req, res) => {
     try {
+     
+
         const { stars, comment } = req.body;
         const { id } = req.params;
 
@@ -158,3 +159,31 @@ exports.updateReviewDetials = async (req, res) => {
         return handleResponse(res, 500, "Error in updating review");
     }
 }
+
+
+exports.getReviewDetailById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const existReview = await prisma.review.findUnique({
+            where: {
+                id: id
+            }
+        });
+
+        if (!existReview) {
+            return handleResponse(res, 404, "Review details not found");
+
+        }
+
+        return handleResponse(res, 200, "Review detail fetched successfully", existReview)
+
+    } catch (error) {
+        if (error.code === 'P2023') {
+            return handleResponse(res, 404, "Review not found!");
+        }
+        console.log(error)
+        return handleResponse(res, 500, "Error on fetching review details");
+    }
+
+}
+

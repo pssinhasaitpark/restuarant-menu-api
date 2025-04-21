@@ -110,6 +110,7 @@ exports.getTableId = async (req, res) => {
 };
 
 exports.getAllTableDetails = async (req, res) => {
+
     const { role_type, restaurant_id } = req.user;
 
     try {
