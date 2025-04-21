@@ -160,6 +160,8 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
+
+
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -173,6 +175,8 @@ exports.getAllOrders = async (req, res) => {
         restaurant: true
       }
     });
+
+    
 
     if (!orders) {
       return handleResponse(res, 404, "Order details are empty")

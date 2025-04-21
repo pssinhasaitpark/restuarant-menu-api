@@ -9,6 +9,7 @@ const { sendSupportConnectingMail } = require('../../utils/emailHandler');
 
 exports.createSupport = async (req, res) => {
     try {
+        
         const { issues } = req.body;
         const user_id = req.user.sub;
         const { restaurantId } = req.params;

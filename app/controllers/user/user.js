@@ -114,10 +114,62 @@ exports.verifyOtp = async (req, res) => {
 };
 
 
+// exports.getUserById = async (req, res) => {
+//     try {
+//         const user_id = req.user.sub; 
+
+//         const user = await prisma.user.findUnique({
+//             where: {
+//                 id: user_id
+//             },
+//             include: {
+//                 booking: {
+//                     include: {
+//                         restaurant: {
+//                             select: {
+//                                 restaurant_name: true,
+//                                 location: true,
+//                                 images:true
+
+//                             }
+//                         },
+//                         menu_items: {
+//                             select: {
+//                                 item_name: true,
+//                                 item_description: true,
+//                                 item_price: true,
+//                                 images:true
+//                             }
+//                         }
+//                     }
+//                 },
+//                 review:true
+//             }
+//         });
+
+//         if (!user) {
+//             return handleResponse(res, 404, "User not found");
+//         }
+
+//         return handleResponse(res, 200, "User details fetched successfully", user);
+
+//     } catch (error) {
+//         console.error("Error in getUserById:", error);
+
+//         if (error.code === 'P2023') {
+//             return handleResponse(res, 400, "Please provide a valid user ID");
+//         }
+
+//         return handleResponse(res, 500, "Error in fetching user details");
+//     }
+// };
+
+
+
+
 exports.getUserById = async (req, res) => {
     try {
         const user_id = req.user.sub; 
-
         const user = await prisma.user.findUnique({
             where: {
                 id: user_id
@@ -129,22 +181,27 @@ exports.getUserById = async (req, res) => {
                             select: {
                                 restaurant_name: true,
                                 location: true,
-                                images:true
-
+                                images: true
                             }
                         },
-                        menu_items: {
+                        tables: true,
+                    }
+                },
+                review: true,
+                order_menu_items: {
+                    select: {
+                        quantity: true,
+                        menu_item: {
                             select: {
                                 item_name: true,
-                                item_description: true,
                                 item_price: true
                             }
                         }
                     }
-                },
-                review:true
+                }
             }
         });
+        
 
         if (!user) {
             return handleResponse(res, 404, "User not found");
@@ -162,7 +219,6 @@ exports.getUserById = async (req, res) => {
         return handleResponse(res, 500, "Error in fetching user details");
     }
 };
-
 
 
 exports.getAllUser = async (req, res) => {

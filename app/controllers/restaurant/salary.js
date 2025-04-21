@@ -1,7 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { handleResponse } = require('../../utils/helper');
-
 const { staffSalarySchema } = require('../../vailidators/validaters');
 
 
@@ -84,19 +83,26 @@ exports.getStaffSalaryById = async (req, res) => {
     const { staffId } = req.params;
 
     try {
-
         const staff = await prisma.staff.findUnique({
             where: { id: staffId },
             include: {
                 staff_salary: true,
+                restaurant: {
+                    select:{
+                        id:true,
+                        restaurant_name:true,
+                        email:true,
+                        mobile:true,
+                        location:true,
+                        logo:true
+                    }
+                }
             },
         });
-
 
         if (!staff) {
             return handleResponse(res, 404, "Staff not found");
         }
-
 
         return handleResponse(res, 200, "Staff salary details retrieved successfully", {
             staff: {
@@ -105,8 +111,22 @@ exports.getStaffSalaryById = async (req, res) => {
                 last_name: staff.last_name,
                 email: staff.email,
                 designation: staff.designation,
-                department: staff.department
+                department: staff.department,
             },
+            restaurant_details: staff.restaurant
+                ? {
+                    id: staff.restaurant.id,
+                    restaurant_name: staff.restaurant.restaurant_name,
+                    owner_name: staff.restaurant.owner_name,
+                    email: staff.restaurant.email,
+                    mobile: staff.restaurant.mobile,
+                    location: staff.restaurant.location,
+                    opening_time: staff.restaurant.opening_time,
+                    closing_time: staff.restaurant.closing_time,
+                    logo: staff.restaurant.logo,
+                    type: staff.restaurant.type,
+                }
+                : null,
             salary_details: staff.staff_salary,
         });
     } catch (error) {
