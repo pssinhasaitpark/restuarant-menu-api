@@ -10,7 +10,7 @@ router.post("/:restaurantId", verifyToken, support.createSupport);
 
 router.get("/:id", support.getSupportDetailsById);
 
-router.get("/", support.getSupportDetails)
+router.get("/",verifyToken, support.getSupportDetails)
 
 router.delete("/:id", support.deleteSupportDetails)
 
