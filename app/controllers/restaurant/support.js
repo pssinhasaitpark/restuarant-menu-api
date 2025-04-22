@@ -9,7 +9,7 @@ const { sendSupportConnectingMail } = require('../../utils/emailHandler');
 
 exports.createSupport = async (req, res) => {
     try {
-        
+
         const { issues } = req.body;
         const user_id = req.user.sub;
         const { restaurantId } = req.params;
@@ -90,7 +90,13 @@ exports.getSupportDetailsById = async (req, res) => {
 
 exports.getSupportDetails = async (req, res) => {
     try {
+
+        const { restaurant_id } = req.user;
+
         const supports = await prisma.support.findMany({
+            where:{
+                restaurant_id:restaurant_id
+            },
             include: {
                 user: {
                     select: {
@@ -149,7 +155,7 @@ exports.replyOfIssues = async (req, res) => {
         const { message } = req.body;
         const { role_type } = req.user;
         const { supportId } = req.params;
-  
+
         if (!supportId || !message) {
             return handleResponse(res, 400, "supportId and message are required");
         }
@@ -188,11 +194,11 @@ exports.getReplies = async (req, res) => {
         const support = await prisma.support.findUnique({
             where: { id: supportId },
             include: {
-                user: true, 
-                messages: true, 
+                user: true,
+                messages: true,
             }
         });
-    
+
         if (!support) {
             return handleResponse(res, 404, "Support ticket not found");
         }
@@ -203,21 +209,21 @@ exports.getReplies = async (req, res) => {
                 issues: support.issues,
                 restaurant_id: support.restaurant_id,
                 user_id: support.user_id,
-                user_name: support.user ? support.user.user_name : "Unknown User",  
-                createdAt: support.createdAt.toISOString(),  
+                user_name: support.user ? support.user.user_name : "Unknown User",
+                createdAt: support.createdAt.toISOString(),
             },
             messages: support.messages.map(message => ({
                 id: message.id,
                 message: message.message,
-                sender: message.sender === 'restaurant_admin' ? 'restaurant_admin' : 'user', 
-                sender_name: message.sender === 'restaurant_admin' 
-                    ? 'Admin'  
-                    : support.user ? support.user.user_name : "Unknown User", 
-                timestamp: message.createdAt.toISOString(), 
+                sender: message.sender === 'restaurant_admin' ? 'restaurant_admin' : 'user',
+                sender_name: message.sender === 'restaurant_admin'
+                    ? 'Admin'
+                    : support.user ? support.user.user_name : "Unknown User",
+                timestamp: message.createdAt.toISOString(),
             }))
         };
 
-        
+
         return handleResponse(res, 200, "Replies fetched successfully", response);
 
     } catch (error) {

@@ -102,15 +102,6 @@ model category {
   @@unique([category_name, restaurant_id])
 }
 
-// model support {
-//   id String @id @default(uuid()) @db.Uuid
-//   issues        String
-//   restaurant_id String
-//   user_id       String
-//   user          user       @relation(fields: [user_id], references: [id])
-//   restaurant    restaurant @relation(fields: [restaurant_id], references: [id])
-// }
-
 
 model support {
   id             String            @id @default(uuid()) @db.Uuid

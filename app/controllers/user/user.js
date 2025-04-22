@@ -185,9 +185,10 @@ exports.getUserById = async (req, res) => {
                             }
                         },
                         tables: true,
-                    }
+                       
+                    },
+                    
                 },
-                review: true,
                 order_menu_items: {
                     select: {
                         quantity: true,
@@ -198,7 +199,9 @@ exports.getUserById = async (req, res) => {
                             }
                         }
                     }
-                }
+                },
+                review: true,
+            
             }
         });
         

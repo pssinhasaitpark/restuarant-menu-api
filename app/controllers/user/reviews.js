@@ -75,6 +75,18 @@ exports.getReviewsDetails = async (req, res) => {
                 }
             });
         }
+        else{
+            reviews = await prisma.review.findMany({
+                include: {
+                    restaurant: {
+                        select: {
+                            restaurant_name: true
+                        }
+                    }
+                }
+            });
+
+        }
 
         if (!reviews || reviews.length === 0) {
             return handleResponse(res, 404, 'No Reviews found.');
@@ -160,7 +172,6 @@ exports.updateReviewDetials = async (req, res) => {
     }
 }
 
-
 exports.getReviewDetailById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -187,3 +198,28 @@ exports.getReviewDetailById = async (req, res) => {
 
 }
 
+
+exports.getAllReviews = async (req, res) => {
+    try {
+          const  reviews = await prisma.review.findMany({
+                include: {
+                    restaurant: {
+                        select: {
+                            restaurant_name: true,
+                            images:true
+                        }
+                    }
+                }
+            });
+
+        if (!reviews || reviews.length === 0) {
+            return handleResponse(res, 404, 'No Reviews found.');
+        }
+
+        return handleResponse(res, 200, 'Reviews details fetched successfully.', reviews);
+
+    } catch (error) {
+        console.log(error);
+        return handleResponse(res, 500, 'Error in fetching review details');
+    }
+}
