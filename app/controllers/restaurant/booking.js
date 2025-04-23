@@ -9,6 +9,12 @@ const crypto = require('crypto');
 
 exports.bookingTable = async (req, res) => {
   try {
+
+    const { error } = bookingSchema.validate(req.body);
+    if (error) {
+      return handleResponse(res, 400, error.details[0].message);
+    }
+
     const restaurant_id = req.params.id;
     const user_id = req.user.sub;
 
@@ -97,7 +103,7 @@ exports.bookingTable = async (req, res) => {
       menu_items.forEach(item => {
         const menuItem = menuItemDetails.find(m => m.id === item.id);
         if (menuItem) {
-          totalCharge += menuItem.item_price * item.quantity;
+          totalCharge += parseFloat(menuItem.item_price) * item.quantity;
           selectedMenuItems.push({
             ...menuItem,
             quantity: item.quantity,
@@ -180,16 +186,16 @@ exports.bookingTable = async (req, res) => {
       data: newBookingData,
       include: {
         tables: true,
-        user: true, 
+        user: true,
       },
     });
-
 
     if (selectedMenuItems.length > 0) {
       const orderItemsData = selectedMenuItems.map(item => ({
         menu_item_id: item.id,
         quantity: item.quantity,
-        user_id: user_id
+        user_id: user_id,
+        booking_id: newBooking.id,
       }));
 
       await prisma.order_menu_items.createMany({
@@ -198,36 +204,55 @@ exports.bookingTable = async (req, res) => {
       });
     }
 
-
-    let orderedItems = [];
-    if (selectedMenuItems.length > 0) {
-      orderedItems = await prisma.order_menu_items.findMany({
-        where: {
-          user_id: user_id
+   
+    const updatedBooking = await prisma.booking.findUnique({
+      where: { id: newBooking.id },
+      include: {
+        tables: true,
+        user: true,
+        order_menu_items: {
+          include: {
+            menu_item: true,
+          },
         },
-        include: {
-          menu_item: true,
-        },
-      });
-    }
-
+      },
+    });
 
     const sanitizedUser = {
-      id: newBooking.user.id,
-      user_name: newBooking.user.user_name,
-      email: newBooking.user.email,
-      mobile_no: newBooking.user.mobile_no,
-      createdAt: newBooking.user.createdAt,
+      id: updatedBooking.user.id,
+      user_name: updatedBooking.user.user_name,
+      email: updatedBooking.user.email,
+      mobile_no: updatedBooking.user.mobile_no,
+      createdAt: updatedBooking.user.createdAt,
     };
 
+    // Construct the response only with the necessary data
     return handleResponse(
       res,
       201,
       "Table booking initiated successfully. Proceed to payment.",
       {
-        ...newBooking,
+        id: updatedBooking.id,
+        customer_name: updatedBooking.customer_name,
+        contact_no: updatedBooking.contact_no,
+        num_of_people: updatedBooking.num_of_people,
+        booking_time: updatedBooking.booking_time,
+        date: updatedBooking.date,
+        total_charge: updatedBooking.total_charge,
+        instruction: updatedBooking.instruction,
+        status: updatedBooking.status,
+        payment_status: updatedBooking.payment_status || "pending",
+        razorpay_order_id: updatedBooking.razorpay_order_id,
+        payment_id: updatedBooking.payment_id || "null",
+        token_number: updatedBooking.token_number || null,
+        is_visited: updatedBooking.is_visited,
+        restaurant_id: updatedBooking.restaurant_id,
+        user_id: updatedBooking.user_id,
+        createdAt: updatedBooking.createdAt,
+        updatedAt: updatedBooking.updatedAt,
+        tables: updatedBooking.tables,
         user: sanitizedUser,
-        ordered_items: orderedItems.map(item => ({
+        ordered_items: updatedBooking.order_menu_items.map(item => ({
           id: item.menu_item.id,
           name: item.menu_item.item_name,
           price: item.menu_item.item_price,
@@ -243,7 +268,6 @@ exports.bookingTable = async (req, res) => {
     return handleResponse(res, 500, "Error in booking table");
   }
 };
-
 
 
 exports.cancelBooking = async (req, res) => {
@@ -275,10 +299,10 @@ exports.cancelBooking = async (req, res) => {
         data: { status: 'free' }
       })
     );
-    
+
     await Promise.all(updateTables);
-  
-  
+
+
     const data = await prisma.booking.update({
       where: { id: id, user_id: user_id },
       data: {
@@ -337,6 +361,7 @@ exports.updateBookingTime = async (req, res) => {
     return handleResponse(res, 500, 'Error in updating booking time');
   }
 };
+
 
 exports.getAllBookings = async (req, res) => {
 
@@ -400,6 +425,7 @@ exports.getAllBookings = async (req, res) => {
     return handleResponse(res, 500, 'Error in fetching bookings');
   }
 };
+
 
 exports.verifyBookingPayment = async (req, res) => {
 

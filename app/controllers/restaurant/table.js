@@ -62,6 +62,7 @@ exports.addTable = async (req, res) => {
     return handleResponse(res, 201, 'Tables created successfully.', createdTables);
 };
 
+
 exports.availableTables = async (req, res) => {
 
     const restaurantId = req.query.id || req.user.restaurant_id;
@@ -83,6 +84,7 @@ exports.availableTables = async (req, res) => {
         return handleResponse(res, 500, 'Internal Server Error');
     }
 };
+
 
 exports.getTableId = async (req, res) => {
 
@@ -108,6 +110,7 @@ exports.getTableId = async (req, res) => {
         return handleResponse(res, 500, 'Internal Server Error');
     }
 };
+
 
 exports.getAllTableDetails = async (req, res) => {
 
@@ -136,6 +139,7 @@ exports.getAllTableDetails = async (req, res) => {
         return handleResponse(res, 500, 'Internal Server Error');
     }
 };
+
 
 exports.deleteTable = async (req, res) => {
     try {
@@ -181,6 +185,7 @@ exports.deleteTable = async (req, res) => {
         return handleResponse(res, 500, 'Something went wrong while deleting the table');
     }
 };
+
 
 exports.updateTable = async (req, res) => {
     try {

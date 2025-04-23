@@ -52,6 +52,7 @@ exports.addReviews = async (req, res) => {
     }
 };
 
+
 exports.getReviewsDetails = async (req, res) => {
     try {
         let reviews;
@@ -100,6 +101,7 @@ exports.getReviewsDetails = async (req, res) => {
     }
 }
 
+
 exports.deleteReviewDetail = async (req, res) => {
     try {
         const { id } = req.params;
@@ -130,6 +132,7 @@ exports.deleteReviewDetail = async (req, res) => {
     }
 
 }
+
 
 exports.updateReviewDetials = async (req, res) => {
     try {
@@ -171,6 +174,7 @@ exports.updateReviewDetials = async (req, res) => {
         return handleResponse(res, 500, "Error in updating review");
     }
 }
+
 
 exports.getReviewDetailById = async (req, res) => {
     try {

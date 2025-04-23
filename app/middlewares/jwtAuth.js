@@ -8,6 +8,7 @@ exports.signAccessToken = (restaurant_id, role_type) => {
   return exports.generateToken(restaurant_id, role_type, process.env.ACCESS_TOKEN_SECRET);
 };
 
+
 exports.generateToken = (restaurant_id, role_type, secret, expiresIn = process.env.EXPIREIN) => {
   return new Promise((resolve, reject) => {
     const payload = {
@@ -27,6 +28,7 @@ exports.generateToken = (restaurant_id, role_type, secret, expiresIn = process.e
   });
 };
 
+
 exports.signResetToken = (email) => {
   return new Promise((resolve, reject) => {
     const payload = { email };
@@ -39,13 +41,15 @@ exports.signResetToken = (email) => {
   });
 };
 
+
 exports.encryptToken = (token) => {
   const key = crypto.createHash('sha256').update(process.env.ACCESS_TOKEN_SECRET).digest();
   const cipher = crypto.createCipheriv('aes-256-cbc', key, Buffer.from(process.env.ACCESS_TOKEN_SECRET).slice(0, 16));
   let encrypted = cipher.update(token, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return encrypted;
-}
+};
+
 
 exports.decryptToken = (encryptedToken) => {
   const key = crypto.createHash('sha256').update(process.env.ACCESS_TOKEN_SECRET).digest();
@@ -53,7 +57,7 @@ exports.decryptToken = (encryptedToken) => {
   let decrypted = decipher.update(encryptedToken, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;
-}
+};
 
 
 exports.verifyToken = async (req, res, next) => {

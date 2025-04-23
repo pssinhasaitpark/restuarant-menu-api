@@ -8,15 +8,7 @@ const { verifyToken } = require('../../middlewares/jwtAuth');
 
 router.post("/:staffId", verifyToken, salary.createStaffSalary);
 
- router.get("/:staffId", verifyToken, salary.getStaffSalaryById);
-
-// router.get("/", verifyToken, staff.getAllStaffMembers);
-
-// router.delete("/:id", verifyToken, staff.deleteStaffMember);
-
-// router.put("/:id", verifyToken, upload, staff.updateStaffMember);
-
-
+router.get("/:staffId", verifyToken, salary.getStaffSalaryById);
 
 
 module.exports = router;

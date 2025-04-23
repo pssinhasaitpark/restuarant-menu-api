@@ -14,7 +14,7 @@ exports.addStaffMember = async (req, res) => {
         const { restaurant_id } = req.user;
         const { first_name, last_name, email, gender, mobile_no, address, designation, department, employment_type, joining_date, other_details } = req.body;
 
-       
+
         const restaurant = await prisma.restaurant.findUnique({
             where: { id: restaurant_id }
         });
@@ -36,23 +36,23 @@ exports.addStaffMember = async (req, res) => {
         }
 
 
-        const restaurantPrefix = restaurant.restaurant_name.slice(0, 3).toUpperCase(); 
+        const restaurantPrefix = restaurant.restaurant_name.slice(0, 3).toUpperCase();
 
-        
+
         const lastEmployee = await prisma.staff.findFirst({
             where: { restaurant_id: restaurant_id },
             orderBy: { employee_id: 'desc' },
             select: { employee_id: true }
         });
 
-      
+
         let newEmployeeNumber = 1;
         if (lastEmployee && lastEmployee.employee_id) {
             const lastNumber = parseInt(lastEmployee.employee_id.slice(3), 10);
             newEmployeeNumber = lastNumber + 1;
         }
 
-     
+
         const newEmployeeId = `${restaurantPrefix}${newEmployeeNumber.toString().padStart(3, '0')}`;
 
         const profileImageUrl = (req.convertedFiles && req.convertedFiles.profile_image && req.convertedFiles.profile_image[0]);
@@ -84,6 +84,7 @@ exports.addStaffMember = async (req, res) => {
     }
 }
 
+
 exports.getAllStaffMembers = async (req, res) => {
     try {
         const { restaurant_id } = req.user;
@@ -103,6 +104,7 @@ exports.getAllStaffMembers = async (req, res) => {
 
     }
 }
+
 
 exports.getStaffMemberById = async (req, res) => {
     try {
@@ -131,6 +133,7 @@ exports.getStaffMemberById = async (req, res) => {
 
     }
 }
+
 
 exports.deleteStaffMember = async (req, res) => {
     try {
@@ -168,6 +171,7 @@ exports.deleteStaffMember = async (req, res) => {
         return handleResponse(res, 500, 'Error in deleting staff member details');
     }
 };
+
 
 exports.updateStaffMember = async (req, res) => {
     try {

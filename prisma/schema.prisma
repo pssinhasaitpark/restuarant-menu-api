@@ -49,7 +49,7 @@ model table {
 }
 
 model booking {
-  id                String       @id @default(uuid()) @db.Uuid
+  id                String             @id @default(uuid()) @db.Uuid
   customer_name     String
   contact_no        String
   num_of_people     Int
@@ -57,20 +57,21 @@ model booking {
   date              String
   total_charge      Int
   instruction       String?
-  status            String       @default("pending")
-  payment_status    String       @default("pending")
-  razorpay_order_id String       @unique @default("null")
-  payment_id        String       @default("null")
+  status            String             @default("pending")
+  payment_status    String             @default("pending")
+  razorpay_order_id String             @unique @default("null")
+  payment_id        String             @default("null")
   token_number      String?
-  is_visited        String       @default("false")
+  is_visited        String             @default("false")
   restaurant_id     String
   user_id           String
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  restaurant        restaurant   @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
-  user              user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  menu_items        menu_items[] @relation("bookingTomenu_items")
-  tables            table[]      @relation("bookingTotable")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  restaurant        restaurant         @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  user              user               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  menu_items        menu_items[]       @relation("bookingTomenu_items")
+  tables            table[]            @relation("bookingTotable")
+  order_menu_items  order_menu_items[]
 }
 
 model menu_items {
@@ -102,28 +103,38 @@ model category {
   @@unique([category_name, restaurant_id])
 }
 
-
 model support {
-  id             String            @id @default(uuid()) @db.Uuid
-  issues         String
-  restaurant_id  String
-  user_id        String
-  user           user              @relation(fields: [user_id], references: [id])
-  restaurant     restaurant        @relation(fields: [restaurant_id], references: [id])
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  messages       support_message[] 
+  id            String            @id @default(uuid()) @db.Uuid
+  issues        String
+  restaurant_id String
+  user_id       String
+  user          user              @relation(fields: [user_id], references: [id])
+  restaurant    restaurant        @relation(fields: [restaurant_id], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  messages      support_message[]
 }
+
+// model support_message {
+//   id         String            @id @default(uuid()) @db.Uuid
+//   message    String
+//   sender     SupportSenderType
+//   support_id String
+//   createdAt  DateTime          @default(now())
+
+//   support support @relation(fields: [support_id], references: [id], onDelete: Cascade)
+// }
 
 model support_message {
-  id          String   @id @default(uuid()) @db.Uuid
-  message     String
-  sender      SupportSenderType
-  support_id  String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid()) @db.Uuid
+  message    String
+  sender     SupportSenderType
+  support_id String   @db.Uuid  // 👈 Fix: Explicitly mark as UUID
+  createdAt  DateTime @default(now())
 
-  support     support  @relation(fields: [support_id], references: [id], onDelete: Cascade)
+  support    support  @relation(fields: [support_id], references: [id], onDelete: Cascade)
 }
+
 
 enum SupportSenderType {
   user
@@ -202,15 +213,29 @@ model user {
   support          support[]
 }
 
+// model order_menu_items {
+//   id           String     @id @default(uuid()) @db.Uuid
+//   order_id     String?    @db.Uuid
+//   menu_item_id String     @db.Uuid
+//   quantity     Int
+//   user_id      String?
+//   menu_item    menu_items @relation(fields: [menu_item_id], references: [id], onDelete: Cascade)
+//   order        order?     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+//   user         user?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+// }
+
 model order_menu_items {
-  id           String     @id @default(uuid()) @db.Uuid
-  order_id     String?    @db.Uuid
-  menu_item_id String     @db.Uuid
+  id           String  @id @default(uuid()) @db.Uuid
+  order_id     String? @db.Uuid
+  menu_item_id String  @db.Uuid
   quantity     Int
   user_id      String?
-  menu_item    menu_items @relation(fields: [menu_item_id], references: [id], onDelete: Cascade)
-  order        order?     @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  user         user?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  booking_id   String? @db.Uuid // Optional booking_id field
+
+  menu_item menu_items @relation(fields: [menu_item_id], references: [id], onDelete: Cascade)
+  order     order?     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user      user?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  booking   booking?   @relation(fields: [booking_id], references: [id], onDelete: Cascade) // New relation
 }
 
 model order {

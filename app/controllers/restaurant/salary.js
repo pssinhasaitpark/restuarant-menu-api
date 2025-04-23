@@ -5,7 +5,6 @@ const { staffSalarySchema } = require('../../vailidators/validaters');
 
 
 exports.createStaffSalary = async (req, res) => {
-
     const { staffId } = req.params;
     const restaurant_id = req.user?.restaurant_id;
 
@@ -13,8 +12,7 @@ exports.createStaffSalary = async (req, res) => {
     if (error) {
         return handleResponse(res, 400, error.details[0].message);
     }
-
-
+    
     const {
         base_salary,
         bonus,
@@ -33,11 +31,33 @@ exports.createStaffSalary = async (req, res) => {
         return handleResponse(res, 400, "All required salary fields must be provided");
     }
 
+    const monthMap = {
+        January: 1,
+        February: 2,
+        March: 3,
+        April: 4,
+        May: 5,
+        June: 6,
+        July: 7,
+        August: 8,
+        September: 9,
+        October: 10,
+        November: 11,
+        December: 12
+    };
+
+    const monthNumber = monthMap[month];
+    if (!monthNumber) {
+        return handleResponse(res, 400, "Invalid month provided");
+    }
+
     try {
-        const per_day_rate = base_salary / 30;
-        const gross_salary = base_salary + bonus;
-        const total_deduction = (absence_days * per_day_rate) + health_insurance;
-        const total_pay_amount = gross_salary - total_deduction;
+        const daysInMonth = new Date(year, monthNumber, 0).getDate();
+
+        const per_day_rate = parseFloat((base_salary / daysInMonth).toFixed(2));
+        const gross_salary = parseFloat((base_salary + bonus).toFixed(2));
+        const total_deduction = parseFloat(((absence_days * per_day_rate) + health_insurance).toFixed(2));
+        const total_pay_amount = parseFloat((gross_salary - total_deduction).toFixed(2));
 
         const staff = await prisma.staff.findUnique({
             where: { id: staffId }
@@ -53,7 +73,7 @@ exports.createStaffSalary = async (req, res) => {
                 base_salary,
                 bonus,
                 per_day_rate,
-                gross_salary: gross_salary,
+                gross_salary,
                 health_insurance,
                 absence_days,
                 total_deduction,
@@ -70,6 +90,7 @@ exports.createStaffSalary = async (req, res) => {
                 }
             }
         });
+        
 
         return handleResponse(res, 201, "Salary record created", newSalary);
     } catch (error) {
@@ -88,13 +109,13 @@ exports.getStaffSalaryById = async (req, res) => {
             include: {
                 staff_salary: true,
                 restaurant: {
-                    select:{
-                        id:true,
-                        restaurant_name:true,
-                        email:true,
-                        mobile:true,
-                        location:true,
-                        logo:true
+                    select: {
+                        id: true,
+                        restaurant_name: true,
+                        email: true,
+                        mobile: true,
+                        location: true,
+                        logo: true
                     }
                 }
             },

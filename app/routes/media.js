@@ -5,9 +5,9 @@ const fs = require("fs");
 module.exports = app => {
     router.get('/media/:type/:name', (req, res) => {
         const { type, name } = req.params;
-        
+
         let folderPath;
-          
+
         if (type === 'image') {
             folderPath = path.join(__dirname, `../uploads/${name}`);
         } else if (type === 'pdf') {

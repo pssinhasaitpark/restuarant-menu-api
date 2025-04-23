@@ -1,4 +1,3 @@
-const { supportSchema } = require('../../vailidators/validaters');
 const { handleResponse } = require('../../utils/helper');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -94,8 +93,8 @@ exports.getSupportDetails = async (req, res) => {
         const { restaurant_id } = req.user;
 
         const supports = await prisma.support.findMany({
-            where:{
-                restaurant_id:restaurant_id
+            where: {
+                restaurant_id: restaurant_id
             },
             include: {
                 user: {
@@ -149,6 +148,7 @@ exports.deleteSupportDetails = async (req, res) => {
 
     }
 }
+
 
 exports.replyOfIssues = async (req, res) => {
     try {
