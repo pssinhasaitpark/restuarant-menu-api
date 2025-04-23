@@ -47,6 +47,7 @@ exports.restaurantAddSchema = Joi.object({
 
 });
 
+
 exports.bookingSchema = Joi.object({
     customer_name: Joi.string().max(100).required()
       .messages({
@@ -60,8 +61,8 @@ exports.bookingSchema = Joi.object({
         "string.empty": "Contact number cannot be empty."
       }),
   
-    // Updated table_number to expect an array of strings
-    table_number: Joi.array().items(Joi.string().required()).required()
+
+    table_numbers: Joi.array().items(Joi.string().required()).required()
       .messages({
         "array.base": "Table number must be an array of strings.",
         "string.base": "Each table number must be a string.",
@@ -81,39 +82,40 @@ exports.bookingSchema = Joi.object({
     date: Joi.string().required(),
     instruction: Joi.string().optional(),
   
-    // Adding menu_items as an optional array of strings (menu item IDs)
-    menu_items: Joi.array().items(Joi.string().required()).optional()
-      .messages({
-        "array.base": "Menu items must be an array of valid item IDs.",
-        "string.base": "Each menu item must be a string."
-      }),
-  });
   
-
-
-exports.categorySchema = Joi.object({
-    name: Joi.string().required()
-        .messages({
-            "string.empty": "Category name cannot be empty."
-        }),
-
-    description: Joi.string().optional()
+    menu_items: Joi.array().items(
+        Joi.object({
+          id: Joi.string().required(),
+          quantity: Joi.number().integer().positive().required()
+        })
+      ).optional()
+      .messages({
+        "array.base": "Menu items must be an array of valid item objects.",
+        "object.base": "Each menu item must be an object with id and quantity."
+      })
+      
 });
 
 
-exports.menuItemSchema = Joi.array().items(
-    Joi.object({
-        item_name: Joi.string().required()
-            .messages({
-                "string.empty": "Item name cannot be empty."
-            }),
-
+exports.menuItemSchema = Joi.object({
+    category_name: Joi.string().required().messages({
+      "string.empty": "Category name is required."
+    }),
+    items: Joi.array().items(
+      Joi.object({
+        item_name: Joi.string().required().messages({
+          "string.empty": "Item name cannot be empty."
+        }),
         item_description: Joi.string().optional(),
         item_price: Joi.string().optional(),
-        category_name: Joi.string().optional(),
-        sub_category_name: Joi.string().optional()
+        images: Joi.array().items(Joi.string()).optional()
+      })
+    ).min(1).messages({
+      "array.base": "Items must be an array.",
+      "array.min": "At least one item is required."
     })
-);
+});
+
 
 exports.tableSchema = Joi.object({
     table_number: Joi.string().required(),
@@ -122,14 +124,6 @@ exports.tableSchema = Joi.object({
     
 });
 
-exports.forgatePasswordSchema = Joi.object({
-    email: Joi.string().required()
-})
-
-exports.resetSchema = Joi.object({
-    newPassword: Joi.string().required(),
-    confirmPassword: Joi.string().required()
-})
 
 exports.loginSchema = Joi.object({
     email: Joi.string().email().max(50).required(),
@@ -249,8 +243,9 @@ exports.stockSchema = Joi.object({
       'any.required': 'Total price is required.'
     }),
   
-  });
+});
   
+
 exports.staffSalarySchema = Joi.object({
 
     base_salary: Joi.number().required()

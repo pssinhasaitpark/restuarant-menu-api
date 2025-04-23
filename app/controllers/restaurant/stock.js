@@ -1,8 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { stockSchema } = require('../../vailidators/validaters');
-
 const { handleResponse } = require('../../utils/helper');
+
+
 
 exports.createStock = async (req, res) => {
     try {
@@ -41,10 +42,20 @@ exports.createStock = async (req, res) => {
     }
 };
 
+
 exports.getStockDetails = async (req, res) => {
     const { restaurant_id } = req.user;
 
+
     try {
+        const restaurant = await prisma.restaurant.findUnique({
+            where: { id: restaurant_id }
+        });
+        if (!restaurant) {
+            return handleResponse(res, 404, "Restaurent not found")
+        }
+
+
         const stockItems = await prisma.stock.findMany({
             where: { restaurant_id },
         });
@@ -57,6 +68,7 @@ exports.getStockDetails = async (req, res) => {
         return handleResponse(res, 500, 'Error fetching stock items.', error.message);
     }
 };
+
 
 exports.updateStock = async (req, res) => {
     try {
@@ -101,6 +113,7 @@ exports.updateStock = async (req, res) => {
     }
 };
 
+
 exports.deleteStock = async (req, res) => {
 
     try {
@@ -125,19 +138,21 @@ exports.deleteStock = async (req, res) => {
     }
 };
 
+
 exports.getStockItemById = async (req, res) => {
     try {
         const { id } = req.params;
         const { restaurant_id } = req.user;
 
         const data = await prisma.stock.findUnique({
-            where: { id: id,
-                restaurant_id:restaurant_id
-             }
+            where: {
+                id: id,
+                restaurant_id: restaurant_id
+            }
         });
 
-        if(!data){
-            return handleResponse(res,404,"Stock item is not present")
+        if (!data) {
+            return handleResponse(res, 404, "Stock item is not present")
         }
 
         return handleResponse(res, 200, "Stock item fetched  succesfully");

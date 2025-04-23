@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 const { jwtAuthentication } = require("../../middlewares");
 const { sendOtp } = require('../../utils/emailHandler');
 
+
+
 exports.registerUser = async (req, res) => {
     try {
         const { user_name, email, mobile_no } = req.body;
@@ -35,6 +37,7 @@ exports.registerUser = async (req, res) => {
 
 }
 
+
 exports.loginUser = async (req, res) => {
 
     try {
@@ -64,12 +67,13 @@ exports.loginUser = async (req, res) => {
         await sendOtp(email, otp)
 
 
-        return handleResponse(res, 200, "OTP sent successfully.......................");
+        return handleResponse(res, 200, "OTP sent successfully.");
     } catch (err) {
         console.error(err);
         return handleResponse(res, 500, "Internal server error");
     }
 };
+
 
 exports.verifyOtp = async (req, res) => {
     try {
@@ -114,62 +118,10 @@ exports.verifyOtp = async (req, res) => {
 };
 
 
-// exports.getUserById = async (req, res) => {
-//     try {
-//         const user_id = req.user.sub; 
-
-//         const user = await prisma.user.findUnique({
-//             where: {
-//                 id: user_id
-//             },
-//             include: {
-//                 booking: {
-//                     include: {
-//                         restaurant: {
-//                             select: {
-//                                 restaurant_name: true,
-//                                 location: true,
-//                                 images:true
-
-//                             }
-//                         },
-//                         menu_items: {
-//                             select: {
-//                                 item_name: true,
-//                                 item_description: true,
-//                                 item_price: true,
-//                                 images:true
-//                             }
-//                         }
-//                     }
-//                 },
-//                 review:true
-//             }
-//         });
-
-//         if (!user) {
-//             return handleResponse(res, 404, "User not found");
-//         }
-
-//         return handleResponse(res, 200, "User details fetched successfully", user);
-
-//     } catch (error) {
-//         console.error("Error in getUserById:", error);
-
-//         if (error.code === 'P2023') {
-//             return handleResponse(res, 400, "Please provide a valid user ID");
-//         }
-
-//         return handleResponse(res, 500, "Error in fetching user details");
-//     }
-// };
-
-
-
-
 exports.getUserById = async (req, res) => {
     try {
         const user_id = req.user.sub; 
+        
         const user = await prisma.user.findUnique({
             where: {
                 id: user_id
@@ -185,32 +137,45 @@ exports.getUserById = async (req, res) => {
                             }
                         },
                         tables: true,
-                       
-                    },
-                    
-                },
-                order_menu_items: {
-                    select: {
-                        quantity: true,
-                        menu_item: {
+                        order_menu_items: {  
                             select: {
-                                item_name: true,
-                                item_price: true
+                                quantity: true,
+                                menu_item: {
+                                    select: {
+                                        item_name: true,
+                                        item_price: true
+                                    }
+                                }
                             }
                         }
-                    }
+                    },
                 },
                 review: true,
-            
             }
         });
         
-
         if (!user) {
             return handleResponse(res, 404, "User not found");
         }
 
-        return handleResponse(res, 200, "User details fetched successfully", user);
+     
+        const transformedUser = {
+            ...user,
+            role_type: undefined,  
+            otp: undefined,       
+            otp_expiry: undefined, 
+            booking: user.booking.map(booking => ({
+                ...booking,
+                ordered_items: booking.order_menu_items.map(item => ({
+                    name: item.menu_item.item_name,
+                    price: item.menu_item.item_price,
+                    quantity: item.quantity,
+                })),
+                order_menu_items: undefined,
+            }))
+        };
+
+        return handleResponse(res, 200, "User details fetched successfully", transformedUser);
 
     } catch (error) {
         console.error("Error in getUserById:", error);
@@ -247,7 +212,6 @@ exports.getAllUser = async (req, res) => {
     }
 
 }
-
 
 
 exports.deleteUser = async (req, res) => {

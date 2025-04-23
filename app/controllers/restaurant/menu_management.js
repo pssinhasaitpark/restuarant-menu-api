@@ -5,11 +5,19 @@ const prisma = new PrismaClient();
 const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
-const { PDFDocument, rgb } = require('pdf-lib'); 
+const { PDFDocument, rgb } = require('pdf-lib');
 const sharp = require('sharp');
 const axios = require('axios');
 
+
 exports.addMenuItems = async (req, res) => {
+
+    const { error } = menuItemSchema.validate(req.body);
+    if (error) {
+        return handleResponse(res, 400, error.details[0].message);
+    }
+
+
     const { category_name, items } = req.body;
 
     const restaurantId = req.user.restaurant_id;
@@ -17,9 +25,9 @@ exports.addMenuItems = async (req, res) => {
         where: { id: restaurantId },
         select: { id: true, restaurant_name: true, qr_code_url: true, logo: true }
     });
-    
-    if(!restaurant){
-        return handleResponse(res,404,"Restaurent is not exist");
+
+    if (!restaurant) {
+        return handleResponse(res, 404, "Restaurent is not exist");
     }
 
     let imageUrls = [];
@@ -84,8 +92,8 @@ exports.addMenuItems = async (req, res) => {
             createdMenuItems.push(newMenuItem);
         }
 
-      
-        
+
+
         let qrCodeUrl = restaurant.qr_code_url;
 
         if (!qrCodeUrl) {
@@ -106,7 +114,7 @@ exports.addMenuItems = async (req, res) => {
                 await QRCode.toFile(qrTempPath, menuUrl, {
                     errorCorrectionLevel: 'H',
                     margin: 1,
-                    width:500,
+                    width: 500,
                     color: {
                         dark: '#000000',
                         light: '#FFFFFF'
@@ -166,75 +174,75 @@ exports.addMenuItems = async (req, res) => {
                         ])
                         .toFile(finalQrPath);
 
-            
-                        try {
-                      
-                            const pdfDoc = await PDFDocument.create();
-                            const page = pdfDoc.addPage([500, 500]);  
 
-                            const { width, height } = page.getSize();
+                    try {
+
+                        const pdfDoc = await PDFDocument.create();
+                        const page = pdfDoc.addPage([500, 500]);
+
+                        const { width, height } = page.getSize();
 
 
-                        
-                            
-                            const font = await pdfDoc.embedStandardFont('Helvetica');  
-                            const text = restaurant.restaurant_name;
-                            const textSize = 50;  
-                            const textWidth = font.widthOfTextAtSize(text, textSize);
-                            const textX = width / 2 - textWidth / 2;
-                            
-                           
-                            const textY = height / 2 + 200;  
-                        
-                            
-                            page.drawText(text, {
-                                x: textX,
-                                y: textY,
-                                font,
-                                size: textSize,  
-                                color: rgb(0, 0, 0),  
-                                maxWidth: width - 20
-                            });
-                        
-                          
-                            const finalQrBuffer = fs.readFileSync(finalQrPath);
-                            const finalQrImage = await pdfDoc.embedPng(finalQrBuffer);
-                            const qrDims = finalQrImage.scale(1.0);
-                        
-                            const qrX = width / 2 - qrDims.width / 2;
-                            const qrY = height / 2 - qrDims.height / 2;
-                        
-                            page.drawImage(finalQrImage, {
-                                x: qrX,
-                                y: qrY,
-                                width: qrDims.width,
-                                height: qrDims.height
-                            });
-                        
-                          
-                            const pdfBytes = await pdfDoc.save();
-                            const pdfFileName = `menu_${restaurant.restaurant_name}_qr_code.pdf`;
-                            const pdfFilePath = path.join(PDF_PATH, pdfFileName);
-                            fs.writeFileSync(pdfFilePath, pdfBytes);
-                        
-                            qrCodeUrl = `${process.env.IMAGEURL}pdf/${pdfFileName}`;
-                        
-                            await prisma.restaurant.update({
-                                where: { id: restaurantId },
-                                data: { qr_code_url: qrCodeUrl }
-                            });
-                        
-                            
-                            fs.unlinkSync(qrTempPath);
-                            fs.unlinkSync(logoTempPath);
-                            fs.unlinkSync(resizedLogoPath);
-                            fs.unlinkSync(whiteSquarePath);
-                            fs.unlinkSync(finalQrPath);
-                        
-                        } catch (err) {
-                            console.error("Error creating QR code with logo:", err);
-                        }
-                        
+
+
+                        const font = await pdfDoc.embedStandardFont('Helvetica');
+                        const text = restaurant.restaurant_name;
+                        const textSize = 50;
+                        const textWidth = font.widthOfTextAtSize(text, textSize);
+                        const textX = width / 2 - textWidth / 2;
+
+
+                        const textY = height / 2 + 200;
+
+
+                        page.drawText(text, {
+                            x: textX,
+                            y: textY,
+                            font,
+                            size: textSize,
+                            color: rgb(0, 0, 0),
+                            maxWidth: width - 20
+                        });
+
+
+                        const finalQrBuffer = fs.readFileSync(finalQrPath);
+                        const finalQrImage = await pdfDoc.embedPng(finalQrBuffer);
+                        const qrDims = finalQrImage.scale(1.0);
+
+                        const qrX = width / 2 - qrDims.width / 2;
+                        const qrY = height / 2 - qrDims.height / 2;
+
+                        page.drawImage(finalQrImage, {
+                            x: qrX,
+                            y: qrY,
+                            width: qrDims.width,
+                            height: qrDims.height
+                        });
+
+
+                        const pdfBytes = await pdfDoc.save();
+                        const pdfFileName = `menu_${restaurant.restaurant_name}_qr_code.pdf`;
+                        const pdfFilePath = path.join(PDF_PATH, pdfFileName);
+                        fs.writeFileSync(pdfFilePath, pdfBytes);
+
+                        qrCodeUrl = `${process.env.IMAGEURL}pdf/${pdfFileName}`;
+
+                        await prisma.restaurant.update({
+                            where: { id: restaurantId },
+                            data: { qr_code_url: qrCodeUrl }
+                        });
+
+
+                        fs.unlinkSync(qrTempPath);
+                        fs.unlinkSync(logoTempPath);
+                        fs.unlinkSync(resizedLogoPath);
+                        fs.unlinkSync(whiteSquarePath);
+                        fs.unlinkSync(finalQrPath);
+
+                    } catch (err) {
+                        console.error("Error creating QR code with logo:", err);
+                    }
+
                 }
             } catch (err) {
                 console.error("Error creating QR code with logo:", err);
@@ -249,9 +257,8 @@ exports.addMenuItems = async (req, res) => {
 };
 
 
-
 exports.getAllCategories = async (req, res) => {
-    
+
     const restaurantId = req.query.id || req.user.restaurant_id;
 
     try {
@@ -345,7 +352,6 @@ exports.updateCategory = async (req, res) => {
     const restaurantId = req.user.restaurant_id;
 
     try {
-        // Check if the category exists
         const category = await prisma.category.findFirst({
             where: {
                 id: categoryId,
@@ -357,7 +363,6 @@ exports.updateCategory = async (req, res) => {
             return handleResponse(res, 404, 'Category not found.');
         }
 
-        // Check if the new category name is unique within the restaurant
         const existingCategory = await prisma.category.findFirst({
             where: {
                 category_name: category_name,
@@ -369,7 +374,6 @@ exports.updateCategory = async (req, res) => {
             return handleResponse(res, 400, 'Category name already exists.');
         }
 
-        // Update the category name
         const updatedCategory = await prisma.category.update({
             where: {
                 id: categoryId

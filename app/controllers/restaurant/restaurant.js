@@ -15,15 +15,15 @@ exports.addRestaurant = async (req, res) => {
 
     const { restaurant_name, owner_name, email, password, mobile, opening_time, closing_time, location, type } = req.body || {};
 
-    const existingRestaurant=await prisma.restaurant.findUnique({
-        where:{
-            email:email
+    const existingRestaurant = await prisma.restaurant.findUnique({
+        where: {
+            email: email
         }
     });
-    
 
-    if(existingRestaurant){
-        return handleResponse(res,400,"Reastaurant is already registered");
+
+    if (existingRestaurant) {
+        return handleResponse(res, 400, "Reastaurant is already registered");
     }
 
     if (!password) {
@@ -70,21 +70,22 @@ exports.addRestaurant = async (req, res) => {
     }
 };
 
+
 exports.superAdminRegister = async (req, res) => {
     const { email, password, mobile } = req.body;
 
-    const existingUser=await prisma.restaurant.findUnique({
-        where:{
-            email:email
+    const existingUser = await prisma.restaurant.findUnique({
+        where: {
+            email: email
         }
     });
 
-    if(existingUser){
-        return handleResponse(res,400,"Super is already registered");
+    if (existingUser) {
+        return handleResponse(res, 400, "Super is already registered");
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
- 
+
 
     try {
         const newRestaurant = await prisma.restaurant.create({
@@ -102,6 +103,7 @@ exports.superAdminRegister = async (req, res) => {
         return handleResponse(res, 500, 'Something went wrong on creating super-admin');
     }
 };
+
 
 exports.login = async (req, res, next) => {
     const { error } = loginSchema.validate(req.body);
@@ -155,7 +157,6 @@ exports.getAllRestaurent = async (req, res) => {
             created_to
         } = req.query;
 
-        // Build dynamic filters
         let filters = {
             role_type: { not: 'super_admin' }
         };
@@ -173,7 +174,7 @@ exports.getAllRestaurent = async (req, res) => {
         }
 
         if (type) {
-            filters.type = type; // must be 'veg' or 'non_veg'
+            filters.type = type; 
         }
 
         if (location) {
@@ -204,6 +205,7 @@ exports.getAllRestaurent = async (req, res) => {
         if (!data || data.length === 0) {
             return handleResponse(res, 404, "No restaurant found matching the criteria");
         }
+        
 
         return handleResponse(res, 200, "Restaurant details fetched successfully!", data);
     } catch (error) {
@@ -291,6 +293,7 @@ exports.deleteRestaurant = async (req, res) => {
     }
 };
 
+
 exports.getRestaurantCustomers = async (req, res) => {
     const { restaurant_id, role_type } = req.user;
 
@@ -335,6 +338,7 @@ exports.getRestaurantCustomers = async (req, res) => {
     }
 };
 
+
 exports.getRestaurentById = async (req, res) => {
     try {
 
@@ -355,6 +359,7 @@ exports.getRestaurentById = async (req, res) => {
         return handleResponse(res, 500, "Error fetching restaurant details", error.message);
     }
 };
+
 
 exports.me = async (req, res) => {
     try {
@@ -378,6 +383,7 @@ exports.me = async (req, res) => {
         return handleResponse(res, 500, "Error in fetching  details", error.message);
     }
 }
+
 
 exports.addWishlist = async (req, res) => {
     const { restaurantId } = req.params;
