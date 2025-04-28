@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 
+
 exports.placeOrder = async (req, res) => {
   try {
 
@@ -214,6 +215,11 @@ exports.getAllOrders = async (req, res) => {
     return handleResponse(res, 500, "Something went wrong while fetching orders");
   }
 };
+
+
+
+
+
 
 
 

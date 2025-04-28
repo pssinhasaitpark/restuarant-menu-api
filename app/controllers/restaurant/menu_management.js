@@ -482,6 +482,7 @@ exports.getMenuItemById = async (req, res) => {
                 item_name: true,
                 item_description: true,
                 item_price: true,
+                images:true,
                 type: true,
                 category: {
                     select: {

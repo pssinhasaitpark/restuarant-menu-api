@@ -10,5 +10,7 @@ module.exports = {
     order: require('./restaurant/order.js'),
     stock: require('./restaurant/stock'),
     salary: require('./restaurant/salary'),
-    social_media: require('./restaurant/social_media')
+    social_media: require('./restaurant/social_media'),
+   restaurant_details: require('./restaurant/restaurant_details.js')
+
 }
