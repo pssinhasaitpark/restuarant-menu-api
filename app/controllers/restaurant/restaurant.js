@@ -174,7 +174,7 @@ exports.getAllRestaurent = async (req, res) => {
         }
 
         if (type) {
-            filters.type = type; 
+            filters.type = type;
         }
 
         if (location) {
@@ -205,7 +205,7 @@ exports.getAllRestaurent = async (req, res) => {
         if (!data || data.length === 0) {
             return handleResponse(res, 404, "No restaurant found matching the criteria");
         }
-        
+
 
         return handleResponse(res, 200, "Restaurant details fetched successfully!", data);
     } catch (error) {
@@ -438,3 +438,4 @@ exports.getWishlist = async (req, res) => {
         return handleResponse(res, 500, "Error fetching WishList restaurant details", error.message);
     }
 }
+

@@ -8,33 +8,34 @@ datasource db {
 }
 
 model restaurant {
-  id              String         @id @default(uuid())
-  role_type       String         @default("restaurant_admin")
-  restaurant_name String?
-  owner_name      String?
-  email           String         @unique
-  password        String
-  mobile          String
-  opening_time    String?
-  closing_time    String?
-  location        String?
-  logo            String         @default("logo url")
-  type            restaurantType @default(veg)
-  images          String[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  qr_code_url     String?
-  wishlist        Boolean        @default(false)
-  bookings        booking[]
-  category        category[]
-  menu_items      menu_items[]
-  order           order[]
-  review          review[]
-  staff           staff[]
-  staff_salary    staff_salary[]
-  stock           stock[]
-  support         support[]
-  tables          table[]
+  id                 String               @id @default(uuid())
+  role_type          String               @default("restaurant_admin")
+  restaurant_name    String?
+  owner_name         String?
+  email              String               @unique
+  password           String
+  mobile             String
+  opening_time       String?
+  closing_time       String?
+  location           String?
+  logo               String               @default("logo url")
+  type               restaurantType       @default(veg)
+  images             String[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  qr_code_url        String?
+  wishlist           Boolean              @default(false)
+  bookings           booking[]
+  category           category[]
+  menu_items         menu_items[]
+  order              order[]
+  review             review[]
+  staff              staff[]
+  staff_salary       staff_salary[]
+  stock              stock[]
+  support            support[]
+  tables             table[]
+  restaurant_details restaurant_details[]
 }
 
 model table {
@@ -115,26 +116,15 @@ model support {
   messages      support_message[]
 }
 
-// model support_message {
-//   id         String            @id @default(uuid()) @db.Uuid
-//   message    String
-//   sender     SupportSenderType
-//   support_id String
-//   createdAt  DateTime          @default(now())
-
-//   support support @relation(fields: [support_id], references: [id], onDelete: Cascade)
-// }
-
 model support_message {
-  id         String   @id @default(uuid()) @db.Uuid
+  id         String            @id @default(uuid()) @db.Uuid
   message    String
   sender     SupportSenderType
-  support_id String   @db.Uuid  // 👈 Fix: Explicitly mark as UUID
-  createdAt  DateTime @default(now())
+  support_id String            @db.Uuid
+  createdAt  DateTime          @default(now())
 
-  support    support  @relation(fields: [support_id], references: [id], onDelete: Cascade)
+  support support @relation(fields: [support_id], references: [id], onDelete: Cascade)
 }
-
 
 enum SupportSenderType {
   user
@@ -213,17 +203,6 @@ model user {
   support          support[]
 }
 
-// model order_menu_items {
-//   id           String     @id @default(uuid()) @db.Uuid
-//   order_id     String?    @db.Uuid
-//   menu_item_id String     @db.Uuid
-//   quantity     Int
-//   user_id      String?
-//   menu_item    menu_items @relation(fields: [menu_item_id], references: [id], onDelete: Cascade)
-//   order        order?     @relation(fields: [order_id], references: [id], onDelete: Cascade)
-//   user         user?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-// }
-
 model order_menu_items {
   id           String  @id @default(uuid()) @db.Uuid
   order_id     String? @db.Uuid
@@ -288,4 +267,17 @@ model social_media {
   x         String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model restaurant_details {
+  id                   String     @id @default(uuid())
+  gallery_images       String[]
+  about_us             String?
+  privacy_policy       String?
+  terms_and_conditions String?
+  services_name        String[]
+  restaurant_id        String
+  restaurant           restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
 }

@@ -10,7 +10,7 @@ const orderRoutes = require("../routes/restaurant/order");
 const stockRoutes = require("../routes/restaurant/stock");
 const salaryRoutes = require("../routes/restaurant/salary");
 const socialMediaRoutes = require("../routes/restaurant/social_media")
-
+const restaurantDetailsRoutes=require("../routes/restaurant/restaurant_details")
 
 module.exports = (app) => {
     app.use("/api/restaurant", reastaurantRoutes);
@@ -25,4 +25,6 @@ module.exports = (app) => {
     app.use("/api/stock", stockRoutes);
     app.use("/api/salary", salaryRoutes);
     app.use("/api/socialMedia", socialMediaRoutes);
+    app.use("/api/restaurantDetails", restaurantDetailsRoutes);
+
 };
