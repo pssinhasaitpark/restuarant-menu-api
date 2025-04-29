@@ -1,22 +1,31 @@
 const { handleResponse } = require('../../utils/helper');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const path = require('path');
+const fs = require('fs');
+
 
 
 
 exports.placeOrder = async (req, res) => {
   try {
-
     const { customer_name, email, menu_items, token_number } = req.body;
     const restaurant_id = req.query.id;
 
     const restaurant = await prisma.restaurant.findUnique({
-      where: { id: restaurant_id }
-    })
-    if (!restaurant) {
-      return handleResponse(res,404,"Restaurent is not exit")
+      where: { id: restaurant_id },
+      select: { id: true, restaurant_name: true }
+    });
 
+    if (!restaurant) {
+      return handleResponse(res, 404, "Restaurant does not exist");
     }
+
+    if (!restaurant.restaurant_name || restaurant.restaurant_name.length < 3) {
+      return handleResponse(res, 500, "Invalid restaurant name for token generation");
+    }
+
     if (!menu_items || !Array.isArray(menu_items) || menu_items.length === 0) {
       return handleResponse(res, 400, "Menu items are required");
     }
@@ -71,24 +80,30 @@ exports.placeOrder = async (req, res) => {
       return handleResponse(res, 200, "Menu items added to existing order", updatedOrder);
     }
 
-    const getNextTokenNumber = async () => {
+    const getNextTokenNumber = async (restaurant) => {
+      const prefix = restaurant.restaurant_name.slice(0, 3).toUpperCase();
+
       const lastOrder = await prisma.order.findFirst({
+        where: {
+          restaurant_id: restaurant.id,
+          token_number: { startsWith: prefix }
+        },
         orderBy: { createdAt: 'desc' },
         select: { token_number: true }
       });
 
-      if (lastOrder && lastOrder.token_number.startsWith("token_")) {
-        const lastTokenParts = lastOrder.token_number.split('_');
-        const lastTokenNumber = parseInt(lastTokenParts[1], 10);
+      if (lastOrder && lastOrder.token_number) {
+        const lastTokenNumber = parseInt(lastOrder.token_number.slice(3), 10);
         const nextToken = !isNaN(lastTokenNumber) ? lastTokenNumber + 1 : 1;
-        return `token_${nextToken}`;
+        return `${prefix}${String(nextToken).padStart(3, "0")}`;
       } else {
-        return "token_1";
+        return `${prefix}001`;
       }
     };
 
     const getNextOrderId = async () => {
       const lastOrderWithCustomId = await prisma.order.findFirst({
+        where: { restaurant_id },
         orderBy: { createdAt: 'desc' },
         select: { order_id: true }
       });
@@ -105,7 +120,7 @@ exports.placeOrder = async (req, res) => {
     const createOrderWithRetry = async (maxRetries = 3) => {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const newTokenNumber = await getNextTokenNumber();
+          const newTokenNumber = await getNextTokenNumber(restaurant);
           const newCustomOrderId = await getNextOrderId();
 
           const newOrder = await prisma.order.create({
@@ -162,10 +177,13 @@ exports.placeOrder = async (req, res) => {
 };
 
 
-
 exports.getAllOrders = async (req, res) => {
   try {
+    const { restaurant_id } = req.user;
     const orders = await prisma.order.findMany({
+      where: {
+        restaurant_id: restaurant_id
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         order_menu_items: {
@@ -177,9 +195,9 @@ exports.getAllOrders = async (req, res) => {
       }
     });
 
-    
 
-    if (!orders) {
+
+    if (orders.length == 0) {
       return handleResponse(res, 404, "Order details are empty")
     }
 
@@ -217,7 +235,93 @@ exports.getAllOrders = async (req, res) => {
 };
 
 
+exports.exportOrdersToCSV = async (req, res) => {
+  try {
 
+    const { restaurant_id } = req.user;
+
+    if (!restaurant_id) {
+      return handleResponse(res, 400, "Restaurant ID is required");
+    }
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurant_id }
+    });
+
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurant_id: restaurant_id,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        order_menu_items: {
+          include: {
+            menu_item: true,
+          },
+        },
+        restaurant: true
+      }
+    });
+
+    if (!orders || orders.length === 0) {
+      return handleResponse(res, 404, `No orders found for restaurant with ID ${restaurant_id}`);
+    }
+
+    const records = orders.map(order => ({
+      order_id: order.order_id,
+      token_number: order.token_number,
+      customer_name: order.customer_name,
+      email: order.email,
+      status: order.status,
+      total_amount: order.total_amount,
+      createdAt: order.createdAt,
+      restaurant_name: order.restaurant.restaurant_name,
+      restaurant_email: order.restaurant.email,
+      restaurant_location: order.restaurant.location,
+      restaurant_mobile: order.restaurant.mobile,
+      items: order.order_menu_items.map(omi => `${omi.menu_item.item_name} (x${omi.quantity}) - $${omi.menu_item.item_price}`).join('; ')
+    }));
+
+    const directoryPath = path.join(__dirname, '..', '..', 'uploads', 'csv_files');
+
+    if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+    }
+
+    const csvFilePath = path.join(directoryPath, `orders_restaurant_${restaurant.restaurant_name}.csv`);
+
+    const csvWriter = createCsvWriter({
+      path: csvFilePath,
+      header: [
+        { id: 'order_id', title: 'Order ID' },
+        { id: 'token_number', title: 'Token Number' },
+        { id: 'customer_name', title: 'Customer Name' },
+        { id: 'email', title: 'Email' },
+        { id: 'status', title: 'Status' },
+        { id: 'total_amount', title: 'Total Amount' },
+        { id: 'createdAt', title: 'Created At' },
+        { id: 'restaurant_name', title: 'Restaurant Name' },
+        { id: 'restaurant_email', title: 'Restaurant Email' },
+        { id: 'restaurant_location', title: 'Restaurant Location' },
+        { id: 'restaurant_mobile', title: 'Restaurant Mobile' },
+        { id: 'items', title: 'Ordered Items' }
+      ]
+    });
+
+    await csvWriter.writeRecords(records);
+
+    res.download(csvFilePath, `orders_restaurant_${restaurant.restaurant_name}.csv`, (err) => {
+      if (err) {
+        console.error("Error downloading file", err);
+        return handleResponse(res, 500, "Error while downloading the CSV file");
+      }
+    });
+
+  } catch (error) {
+    console.error("Error exporting orders to CSV:", error);
+    return handleResponse(res, 500, "Something went wrong while exporting orders");
+  }
+};
 
 
 

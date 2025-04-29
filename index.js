@@ -11,6 +11,7 @@ app.use(
     origin: [
       "http://192.168.0.130:5173",
       "http://192.168.0.133:5173",
+      "http://192.168.0.130:5174",
       "http://localhost:5173", 
       "https://restrorent.netlify.app"
     ],
