@@ -1,0 +1,21 @@
+item_name,category_name,quantity,unit,supplier_name,price_per_unit
+wheat flour,Grains,50,kg,bigbasket,35
+basmati rice,Grains,30,kg,grofers,60
+sugar,Dry,25,kg,grofers,45
+salt,Dry,20,kg,swiggy,15
+turmeric powder,Spices,5,kg,bigbasket,120
+red chili powder,Spices,4,kg,swiggy,150
+potato,Vegetables,40,kg,local market,20
+onion,Vegetables,35,kg,local market,25
+tomato,Vegetables,30,kg,local market,30
+paneer,Dairy,10,kg,amulfresh,280
+milk,Dairy,40,litre,bigbasket,50
+curd,Dairy,20,kg,amulfresh,60
+bread,Fast Food,25,pack,swiggy,35
+cheese slice,Dairy,15,pack,swiggy,150
+noodles,Fast Food,20,pack,zomato,40
+mayonnaise,Fast Food,5,litre,swiggy,100
+cooking oil,Essentials,15,litre,bigbasket,130
+butter,Dairy,8,kg,amulfresh,400
+ginger paste,Essentials,4,kg,bigbasket,160
+garlic paste,Essentials,4,kg,bigbasket,140

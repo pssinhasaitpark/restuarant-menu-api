@@ -438,4 +438,3 @@ exports.getWishlist = async (req, res) => {
         return handleResponse(res, 500, "Error fetching WishList restaurant details", error.message);
     }
 }
-

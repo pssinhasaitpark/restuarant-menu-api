@@ -28,6 +28,7 @@ router.post("/login", restaurant.login, verifyRole);
 router.put("/wishlist/:restaurantId", restaurant.addWishlist)
 
 
+
 router.get("/", restaurant.getAllRestaurent);
 
 

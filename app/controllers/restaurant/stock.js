@@ -2,46 +2,97 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { stockSchema } = require('../../vailidators/validaters');
 const { handleResponse } = require('../../utils/helper');
-
+const csv = require('csv-parser');
+const fs = require('fs');
+const path = require('path');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 
 exports.createStock = async (req, res) => {
     try {
-        const { error } = stockSchema.validate(req.body);
-        if (error) {
-            return handleResponse(res, 400, error.details[0].message);
-        }
-
-        const { item_name, category_name, quantity, unit, supplier_name, price_per_unit } = req.body;
         const { restaurant_id } = req.user;
 
-        const existingStock = await prisma.stock.findFirst({
-            where: { item_name: item_name }
-        })
+        if (req.convertedFiles && req.convertedFiles['stock-csv']) {
+            const csvFilePath = req.files['stock-csv'][0].path;
+            const results = [];
 
-        if (existingStock) {
-            return handleResponse(res, 400, "This item is already exist");
+         
+            fs.createReadStream(csvFilePath)
+                .pipe(csv())
+                .on('data', (data) => results.push(data))
+                .on('end', async () => {
+                    try {
+                        const insertPromises = results.map(async (row) => {
+                            const validation = stockSchema.validate(row);
+                            if (validation.error) {
+                                throw new Error(`Validation failed for item ${row.item_name}: ${validation.error.details[0].message}`);
+                            }
+
+                         
+                            const existingStock = await prisma.stock.findFirst({
+                                where: { item_name: row.item_name }
+                            });
+
+                            if (existingStock) {
+                                throw new Error(`Item '${row.item_name}' already exists.`);
+                            }
+
+                            return prisma.stock.create({
+                                data: {
+                                    item_name: row.item_name,
+                                    category_name: row.category_name,
+                                    quantity: parseFloat(row.quantity),
+                                    unit: row.unit,
+                                    supplier_name: row.supplier_name,
+                                    price_per_unit: parseFloat(row.price_per_unit),
+                                    total_price: parseFloat(row.price_per_unit) * parseFloat(row.quantity),
+                                    restaurant_id: restaurant_id,
+                                },
+                            });
+                        });
+
+                        const createdItems = await Promise.all(insertPromises);
+                        return handleResponse(res, 201, 'Stock items created successfully.', createdItems);
+                    } catch (err) {
+                        return handleResponse(res, 400, 'CSV processing failed.', err.message);
+                    }
+                });
+        } else {
+            
+            const { error } = stockSchema.validate(req.body);
+            if (error) {
+                return handleResponse(res, 400, error.details[0].message);
+            }
+
+            const { item_name, category_name, quantity, unit, supplier_name, price_per_unit } = req.body;
+
+            const existingStock = await prisma.stock.findFirst({
+                where: { item_name: item_name }
+            });
+
+            if (existingStock) {
+                return handleResponse(res, 400, "This item already exists");
+            }
+
+            const newStock = await prisma.stock.create({
+                data: {
+                    item_name,
+                    category_name,
+                    quantity,
+                    unit,
+                    supplier_name,
+                    price_per_unit,
+                    total_price: price_per_unit * quantity,
+                    restaurant_id,
+                },
+            });
+
+            return handleResponse(res, 201, 'Stock item created successfully.', newStock);
         }
-
-        const newStock = await prisma.stock.create({
-            data: {
-                item_name,
-                category_name,
-                quantity,
-                unit,
-                supplier_name,
-                price_per_unit,
-                total_price: price_per_unit * quantity,
-                restaurant_id: restaurant_id,
-            },
-        });
-
-        return handleResponse(res, 201, 'Stock item created successfully.', newStock);
     } catch (error) {
         return handleResponse(res, 500, 'Error creating stock item.', error.message);
     }
 };
-
 
 exports.getStockDetails = async (req, res) => {
     const { restaurant_id } = req.user;
@@ -68,7 +119,6 @@ exports.getStockDetails = async (req, res) => {
         return handleResponse(res, 500, 'Error fetching stock items.', error.message);
     }
 };
-
 
 exports.updateStock = async (req, res) => {
     try {
@@ -138,7 +188,6 @@ exports.deleteStock = async (req, res) => {
     }
 };
 
-
 exports.getStockItemById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -162,3 +211,77 @@ exports.getStockItemById = async (req, res) => {
         return handleResponse(res, 500, "Error in fetching stock items")
     }
 }
+
+exports.exportStockToCSV = async (req, res) => {
+    try {
+      const { restaurant_id } = req.user;
+  
+      if (!restaurant_id) {
+        return handleResponse(res, 400, "Restaurant ID is required");
+      }
+  
+      const restaurant = await prisma.restaurant.findUnique({
+        where: { id: restaurant_id }
+      });
+  
+      if (!restaurant) {
+        return handleResponse(res, 404, "Restaurant not found");
+      }
+  
+      const stocks = await prisma.stock.findMany({
+        where: { restaurant_id },
+        orderBy: { createdAt: 'desc' }
+      });
+  
+      if (!stocks || stocks.length === 0) {
+        return handleResponse(res, 404, "No stock data found for this restaurant.");
+      }
+  
+      const records = stocks.map(stock => ({
+        item_name: stock.item_name,
+        category_name: stock.category_name,
+        quantity: stock.quantity,
+        unit: stock.unit,
+        supplier_name: stock.supplier_name,
+        price_per_unit: stock.price_per_unit,
+        total_price: stock.total_price,
+        createdAt: stock.createdAt
+      }));
+  
+      const directoryPath = path.join(__dirname, '..', '..', 'uploads', 'csv_files');
+  
+      if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath, { recursive: true });
+      }
+  
+      const fileName = `stock_restaurant_${restaurant.restaurant_name.replace(/\s+/g, '_')}.csv`;
+      const csvFilePath = path.join(directoryPath, fileName);
+  
+      const csvWriter = createCsvWriter({
+        path: csvFilePath,
+        header: [
+          { id: 'item_name', title: 'Item Name' },
+          { id: 'category_name', title: 'Category' },
+          { id: 'quantity', title: 'Quantity' },
+          { id: 'unit', title: 'Unit' },
+          { id: 'supplier_name', title: 'Supplier' },
+          { id: 'price_per_unit', title: 'Price Per Unit' },
+          { id: 'total_price', title: 'Total Price' },
+          { id: 'createdAt', title: 'Created At' }
+        ]
+      });
+  
+      await csvWriter.writeRecords(records);
+  
+      res.download(csvFilePath, fileName, (err) => {
+        if (err) {
+          console.error("Error downloading stock CSV file", err);
+          return handleResponse(res, 500, "Error downloading the stock CSV file");
+        }
+      });
+  
+    } catch (error) {
+      console.error("Error exporting stock to CSV:", error);
+      return handleResponse(res, 500, "Something went wrong while exporting stock data");
+    }
+};

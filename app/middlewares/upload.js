@@ -3,11 +3,9 @@ const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 
-
 const upload = (req, res, next) => {
   const BASE_PATH = path.join(__dirname, "../uploads");
 
-  
   if (!fs.existsSync(BASE_PATH)) {
     fs.mkdirSync(BASE_PATH, { recursive: true });
   }
@@ -18,12 +16,11 @@ const upload = (req, res, next) => {
     },
     filename: function (req, file, cb) {
       const fileNameWithoutExt = path.parse(file.originalname).name;
-      cb(null, fileNameWithoutExt + Date.now() + path.extname(file.originalname));
+      cb(null, fileNameWithoutExt + "-" + Date.now() + path.extname(file.originalname));
     },
   });
 
   const fileFilter = (req, file, cb) => {
-   
     cb(null, true);
   };
 
@@ -33,20 +30,17 @@ const upload = (req, res, next) => {
     fileFilter: fileFilter,
   });
 
-  const allowedFields = ["images", "logo","profile_image","gallery_images"];
+  const allowedFields = ["images", "logo", "profile_image", "gallery_images", "stock-csv"];
 
   upload.fields([
     { name: "images", maxCount: 10 },
     { name: "logo", maxCount: 10 },
     { name: "profile_image", maxCount: 10 },
     { name: "gallery_images", maxCount: 10 },
-
-    
-  
+    { name: "stock-csv", maxCount: 1 }, 
   ])(req, res, async (err) => {
-
     if (err) {
-      console.log("err===", err);
+      console.log("Upload error:", err);
       return res.status(400).send({ message: "File upload failed." });
     }
 
@@ -61,7 +55,6 @@ const upload = (req, res, next) => {
         });
       }
     }
-    
 
     if (!req.files || Object.keys(req.files).length === 0) {
       return next();
@@ -77,6 +70,12 @@ const upload = (req, res, next) => {
 
         for (const file of files) {
           const uploadedFilePath = path.join(BASE_PATH, file.filename);
+
+          if (file.mimetype === "text/csv" || file.originalname.endsWith(".csv")) {
+            convertedFilePaths.push(uploadedFilePath);
+            continue;
+          }
+
           const webpFileName = Date.now() + "-" + file.originalname.split('.')[0] + ".webp";
           const webpFilePath = path.join(BASE_PATH, webpFileName);
 
@@ -94,14 +93,12 @@ const upload = (req, res, next) => {
       }
 
       req.convertedFiles = convertedFiles;
-
       next();
     } catch (error) {
-      console.error("Error converting images to webp:", error);
-      return res.status(500).send({ message: "Failed to convert images." });
+      console.error("Error processing files:", error);
+      return res.status(500).send({ message: "Failed to process files." });
     }
   });
 };
-
 
 module.exports = { upload };
