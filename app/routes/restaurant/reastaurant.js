@@ -13,13 +13,15 @@ router.post("/superAdmin", upload, restaurant.superAdminRegister);
 
 router.get("/me", verifyToken, restaurant.me);
 
-router.put("/:restaurantId", upload,verifyToken, restaurant.updateRestaurant);
+router.put("/:restaurantId", upload, verifyToken, restaurant.updateRestaurant);
 
 router.delete("/:id", restaurant.deleteRestaurant);
 
 router.get("/customers", verifyToken, restaurant.getRestaurantCustomers)
 
 router.get("/wishlist", restaurant.getWishlist);
+
+router.get("/revenue/finance-report", verifyToken, restaurant.getRestaurantFinanceReport);
 
 router.get("/:id", restaurant.getRestaurentById);
 
