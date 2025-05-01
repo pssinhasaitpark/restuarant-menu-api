@@ -18,7 +18,7 @@ exports.addMenuItems = async (req, res) => {
     }
 
 
-    const { category_name, items } = req.body;
+    const { category_name, items,today_special,our_famous_item } = req.body;
 
     const restaurantId = req.user.restaurant_id;
     let restaurant = await prisma.restaurant.findUnique({
@@ -421,7 +421,13 @@ exports.updateMenuItem = async (req, res) => {
         }
 
         for (let item of items) {
-            const { item_name, item_price, item_description } = item;
+            const {
+                item_name,
+                item_price,
+                item_description,
+                is_today_special,   
+                is_famous_item      
+            } = item;
 
             const existingItem = await prisma.menu_items.findFirst({
                 where: {
@@ -453,11 +459,14 @@ exports.updateMenuItem = async (req, res) => {
                     item_price: item_price,
                     images: imageUrls,
                     category_id: category.id,
+                    is_today_special: is_today_special ?? false,  
+                    is_famous_item: is_famous_item ?? false        
                 }
             });
 
             return handleResponse(res, 200, 'Menu item updated successfully.', updatedMenuItem);
         }
+
     } catch (err) {
         console.error(err);
         return handleResponse(res, 500, 'Error in updating menu item.');
@@ -538,4 +547,48 @@ exports.getQrCode = async (req, res) => {
 };
 
 
-
+exports.getFamousItems = async (req, res) => {
+    try {
+      const famousItems = await prisma.menu_items.findMany({
+        where: {
+          is_famous_item: true
+        },
+        select: {
+          id: true,
+          item_name: true,
+          item_description: true,
+          item_price: true,
+          images: true,
+          type: true,
+          createdAt: true,
+          restaurant: {
+            select: {
+              id: true,
+              restaurant_name: true,
+              location: true,
+              logo: true
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              category_name: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+  
+      if (famousItems.length === 0) {
+        return handleResponse(res, 404, 'No famous items found.');
+      }
+  
+      return handleResponse(res, 200, 'Famous items fetched successfully.', famousItems);
+    } catch (error) {
+      console.error('Error fetching famous items:', error);
+      return handleResponse(res, 500, 'Internal server error while fetching famous items.');
+    }
+};
+  

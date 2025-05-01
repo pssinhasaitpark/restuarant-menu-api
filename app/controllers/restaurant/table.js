@@ -9,6 +9,7 @@ exports.addTable = async (req, res) => {
     if (!Array.isArray(req.body.tables) || req.body.tables.length === 0) {
         return handleResponse(res, 400, 'Invalid request. No tables provided.');
     }
+    console.log("req.body==",req.body);
     
 
     const createdTables = [];

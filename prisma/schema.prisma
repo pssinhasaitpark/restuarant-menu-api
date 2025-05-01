@@ -86,6 +86,8 @@ model menu_items {
   restaurant_id    String
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+  is_today_special Boolean            @default(false) 
+  is_famous_item   Boolean            @default(false) 
   category         category           @relation(fields: [category_id], references: [id], onDelete: Cascade)
   restaurant       restaurant         @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   order_menu_items order_menu_items[]
