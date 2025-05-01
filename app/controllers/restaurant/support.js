@@ -10,6 +10,9 @@ exports.createSupport = async (req, res) => {
     try {
 
         const { issues } = req.body;
+        if (!issues) {
+            return handleResponse(res, 400, "Please provide a issues");
+        }
         const user_id = req.user.sub;
         const { restaurantId } = req.params;
 

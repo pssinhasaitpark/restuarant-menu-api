@@ -22,7 +22,10 @@ router.put("/category/:categoryId",verifyToken,menu_management.updateCategory);
 
 router.put("/menuItem/:menuItemId",verifyToken,upload,menu_management.updateMenuItem);
 
-router.get("/:menuItemId",menu_management.getMenuItemById)
+router.get("/our-famous-items",menu_management.getFamousItems);
+
+router.get("/:menuItemId",menu_management.getMenuItemById);
+
 
 
 
