@@ -40,13 +40,15 @@ model restaurant {
 
 model table {
   id            String     @id @default(uuid()) @db.Uuid
-  table_number  String     @unique
+  table_number  String
   capacity      Int
   cover_charges Int        @default(30)
   status        String     @default("free")
   restaurant_id String
   restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   bookings      booking[]  @relation("bookingTotable")
+
+  @@unique([table_number, restaurant_id]) 
 }
 
 model booking {
@@ -86,8 +88,8 @@ model menu_items {
   restaurant_id    String
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
-  is_today_special Boolean            @default(false) 
-  is_famous_item   Boolean            @default(false) 
+  is_today_special Boolean            @default(false)
+  is_famous_item   Boolean            @default(false)
   category         category           @relation(fields: [category_id], references: [id], onDelete: Cascade)
   restaurant       restaurant         @relation(fields: [restaurant_id], references: [id], onDelete: Cascade)
   order_menu_items order_menu_items[]

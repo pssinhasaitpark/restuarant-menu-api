@@ -9,9 +9,7 @@ exports.addTable = async (req, res) => {
     if (!Array.isArray(req.body.tables) || req.body.tables.length === 0) {
         return handleResponse(res, 400, 'Invalid request. No tables provided.');
     }
-    console.log("req.body==",req.body);
     
-
     const createdTables = [];
 
     for (let table of req.body.tables) {
@@ -34,6 +32,7 @@ exports.addTable = async (req, res) => {
                 restaurant_id: restaurantId
             }
         });
+        
 
         if (existingTable) {
             return handleResponse(res, 400, 'Table with number ' + table_number + ' already exists.');

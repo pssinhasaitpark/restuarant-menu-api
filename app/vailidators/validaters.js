@@ -80,8 +80,9 @@ exports.bookingSchema = Joi.object({
   
     booking_time: Joi.string().required(),
     date: Joi.string().required(),
-    instruction: Joi.string().optional(),
-  
+    instruction: Joi.string().allow('').optional(),
+
+    
   
     menu_items: Joi.array().items(
         Joi.object({
