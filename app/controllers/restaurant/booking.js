@@ -226,7 +226,7 @@ exports.bookingTable = async (req, res) => {
       createdAt: updatedBooking.user.createdAt,
     };
 
-    // Construct the response only with the necessary data
+  
     return handleResponse(
       res,
       201,

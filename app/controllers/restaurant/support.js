@@ -92,29 +92,53 @@ exports.getSupportDetailsById = async (req, res) => {
 
 exports.getSupportDetails = async (req, res) => {
     try {
+        const { restaurant_id, role_type } = req.user;
+        const userId = req.user.sub;
 
-        const { restaurant_id } = req.user;
+        let supports;
 
-        const supports = await prisma.support.findMany({
-            where: {
-                restaurant_id: restaurant_id
-            },
-            include: {
-                user: {
-                    select: {
-                        user_name: true,
-                        email: true,
-                        mobile_no: true,
-                        createdAt: true
+        if (restaurant_id && role_type === 'restaurant_admin') {
+
+
+            supports = await prisma.support.findMany({
+                where: {
+                    restaurant_id: restaurant_id
+                },
+                include: {
+                    user: {
+                        select: {
+                            user_name: true,
+                            email: true,
+                            mobile_no: true,
+                            createdAt: true
+                        }
                     }
-                }
-            },
-        });
-
-        if (!supports || supports.length === 0) {
-            return handleResponse(res, 404, "Support details is empty");
+                },
+            });
+        } else if (userId && role_type === 'user') {
+            supports = await prisma.support.findMany({
+                where: {
+                    user_id: userId
+                },
+                include: {
+                    user: {
+                        select: {
+                            user_name: true,
+                            email: true,
+                            mobile_no: true,
+                            createdAt: true
+                        }
+                    }
+                },
+            });
+        }
+        else {
+            return handleResponse(res, 400, "Invalid request: Missing restaurant_id or user_id");
         }
 
+        if (!supports || supports.length === 0) {
+            return handleResponse(res, 404, "Support details are empty");
+        }
 
         const formattedData = supports.map((item) => ({
             id: item.id,
@@ -127,11 +151,10 @@ exports.getSupportDetails = async (req, res) => {
         return handleResponse(res, 200, "Support details fetched successfully", formattedData);
 
     } catch (error) {
-        console.log(error);
-        return handleResponse(res, 500, "Error in fetch details");
+        console.error(error);
+        return handleResponse(res, 500, "Error in fetching support details");
     }
 };
-
 
 exports.deleteSupportDetails = async (req, res) => {
     try {

@@ -120,14 +120,17 @@ exports.verifyOtp = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
     try {
-        const user_id = req.user.sub; 
-        
+        const user_id = req.user.sub;
+
         const user = await prisma.user.findUnique({
             where: {
                 id: user_id
             },
             include: {
                 booking: {
+                    orderBy: {
+                        createdAt: 'desc'
+                    },
                     include: {
                         restaurant: {
                             select: {
@@ -137,42 +140,41 @@ exports.getUserById = async (req, res) => {
                             }
                         },
                         tables: true,
-                        order_menu_items: {  
+                        order_menu_items: {
                             select: {
                                 quantity: true,
                                 menu_item: {
                                     select: {
                                         item_name: true,
                                         item_price: true,
-                                        images:true
+                                        images: true
                                     }
                                 }
                             }
                         }
-                    },
+                    }
                 },
-                review: true,
+                review: true
             }
         });
-        
+
         if (!user) {
             return handleResponse(res, 404, "User not found");
         }
 
-     
         const transformedUser = {
             ...user,
-            role_type: undefined,  
-            otp: undefined,       
-            otp_expiry: undefined, 
+            role_type: undefined,
+            otp: undefined,
+            otp_expiry: undefined,
             booking: user.booking.map(booking => ({
                 ...booking,
                 ordered_items: booking.order_menu_items.map(item => ({
                     name: item.menu_item.item_name,
                     price: item.menu_item.item_price,
-                    quantity: item.quantity,
+                    quantity: item.quantity
                 })),
-                order_menu_items: undefined,
+                order_menu_items: undefined
             }))
         };
 
@@ -249,5 +251,35 @@ exports.deleteUser = async (req, res) => {
         return handleResponse(res, 500, 'Error in deleting User details');
     }
 };
+
+exports.me = async (req, res) => {
+    try {
+        if (!req.user || !req.user.sub) {
+            return handleResponse(res, 401, "Unauthorized user");
+        }
+
+        const user_id = req.user.sub;
+
+        const user = await prisma.user.findUnique({ 
+            where: { id: user_id },
+            select: {
+                id: true,
+                user_name: true,
+                email: true,
+                mobile_no: true,
+                createdAt: true
+            }
+        });
+
+        if (!user) {
+            return handleResponse(res, 404, "User not found");
+        }
+
+        handleResponse(res, 200, "User details retrieved successfully!", user);
+    } catch (error) {
+        console.log(error)
+        return handleResponse(res, 500, "Error in fetching details", error.message);
+    }
+}
 
 
